@@ -5,65 +5,86 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Hệ thống thi trắc nghiệm trực tuyến - Công an xã Thuần Trung</title>
 <style>
-:root{--navy:#0a2a6e;--blue:#1a5fe0;--bg:#f3f6fc;--line:#e3e9f5;--tx:#16233f;--mut:#6b7a99;--ok:#18a05a;--bad:#e5484d;--card:#fff}
-@media(prefers-color-scheme:dark){:root{--bg:#0e1626;--line:#24324f;--tx:#e6ecf9;--mut:#93a2c4;--card:#15203a}}
+:root{--menu:#0a2a6e;--blue:#1a5fe0;--bg:#f3f6fc;--line:#e3e9f5;--tx:#16233f;--mut:#6b7a99;--ok:#18a05a;--bad:#e5484d;--card:#fff;--r:12px;--fs:14px;--ff:Inter,"Segoe UI",Roboto,Arial,sans-serif;--hz:1.04;--hzb:1.013}
+@media(prefers-color-scheme:dark){:root:not([data-c]){--bg:#0e1626;--line:#24324f;--tx:#e6ecf9;--mut:#93a2c4;--card:#15203a}}
 *{box-sizing:border-box;margin:0}
-body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh}
+html{scroll-behavior:smooth}
+body{font-family:var(--ff);background:var(--bg);color:var(--tx);font-size:var(--fs);min-height:100vh;overflow-x:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
-input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
-:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
-.btn{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-weight:600}
-.btn.o{background:var(--card);color:var(--tx);border:1px solid var(--line)}.btn.s{padding:5px 11px;font-size:12px}.btn.r{background:var(--bad)}.btn.g{background:var(--ok)}
+input,select,textarea{width:100%;padding:.65em .8em;border:1px solid var(--line);border-radius:var(--r);background:var(--card);transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 18%,transparent);outline:0}
+input[type=color]{padding:3px;height:2.6em;cursor:pointer}input[type=range]{padding:0;accent-color:var(--blue)}input[type=checkbox]{width:auto}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:var(--r);padding:.65em 1.2em;cursor:pointer;font-weight:600}
+.btn.o{background:var(--card);color:var(--tx);border:1px solid var(--line)}.btn.s{padding:.4em .85em;font-size:.86em}.btn.r{background:var(--bad)}.btn.g{background:var(--ok)}
 .btn:disabled{opacity:.5;cursor:default}
-.foot{text-align:center;color:var(--mut);font-size:12px;padding:18px 10px}
+.btn,.opt,.pick,.stat,.grid button,nav a,.tag,.ic,.card,.wi{transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,background .2s,border-color .2s}
+html[data-z] :is(.btn,.opt,.pick,.stat,.grid button,nav a,.ic,.tag,.wi):not(:disabled):hover{transform:scale(var(--hz));position:relative;z-index:2}
+html[data-z] .card:hover{transform:scale(var(--hzb));box-shadow:0 12px 32px rgba(10,30,80,.13);position:relative;z-index:1}
+.pick:hover,.opt:hover{border-color:var(--blue)}tbody tr:hover{background:color-mix(in srgb,var(--blue) 6%,transparent)}
+.foot{text-align:center;color:var(--mut);font-size:.86em;padding:18px 10px}
 .split{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
-.hero{background:linear-gradient(160deg,#0a2a6e,#0f3a96 60%,#1b4eb8);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:14px}
-.hero h1{font-size:22px}.hero em{margin-top:22px;font-size:16px;line-height:1.7}
+.hero{background:linear-gradient(160deg,color-mix(in srgb,var(--menu) 90%,transparent),color-mix(in srgb,var(--menu) 72%,transparent)),var(--hi,none),var(--menu);background-size:cover;background-position:center;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:14px}
+.hero h1{font-size:1.6em}.hero em{margin-top:22px;font-size:1.15em;line-height:1.7}
 .side{display:flex;flex-direction:column;justify-content:space-between;background:var(--card)}
 .box{max-width:420px;width:100%;margin:auto;padding:28px 22px;display:flex;flex-direction:column;gap:12px}
-.box h2{text-align:center;font-size:21px}.sub{text-align:center;color:var(--mut)}
-.box label,.fg label{font-size:12px;color:var(--mut);font-weight:600;display:block;margin-bottom:4px}
-.err{color:var(--bad);font-size:12px;min-height:16px}
-.pick{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;margin-bottom:8px}
-.pick input{width:auto;margin-top:3px}.pick small{display:block;color:var(--mut)}
+.fm{display:flex;flex-direction:column;gap:12px;animation:up .3s backwards}.fm[hidden]{display:none}
+.box h2{text-align:center;font-size:1.5em}.sub{text-align:center;color:var(--mut)}
+.box label,.fg label,.fm label{font-size:.86em;color:var(--mut);font-weight:600;display:block;margin-bottom:4px}
+.err{color:var(--bad);font-size:.86em;min-height:16px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-radius:var(--r);padding:4px;gap:4px}
+.tabs button{border:0;background:none;padding:.6em;border-radius:calc(var(--r) - 3px);cursor:pointer;font-weight:600;color:var(--mut);transition:all .2s}.tabs .on{background:var(--card);color:var(--blue);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.pw{position:relative}.pw input{padding-right:2.8em}.eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:none;cursor:pointer;font-size:1.15em;padding:4px 8px;border-radius:var(--r)}
 #app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
-aside{background:linear-gradient(180deg,#0a2a6e,#0b2f7c);color:#fff;display:flex;flex-direction:column;padding:14px 10px;position:sticky;top:0;height:100vh}
-.brand{display:flex;gap:10px;align-items:center;padding:6px 8px 18px;font-weight:700;font-size:13px;line-height:1.25}
+aside{background:linear-gradient(180deg,var(--menu),color-mix(in srgb,var(--menu) 82%,#000));color:#fff;display:flex;flex-direction:column;padding:14px 10px;position:sticky;top:0;height:100vh}
+.brand{display:flex;gap:10px;align-items:center;padding:6px 8px 18px;font-weight:700;font-size:.93em;line-height:1.25}
 nav{display:flex;flex-direction:column;gap:3px;flex:1}
-nav a{display:flex;gap:10px;padding:10px 12px;border-radius:8px;color:#d6e0fa;cursor:pointer;font-size:13px}
-nav a.on{background:var(--blue);color:#fff;font-weight:600}
+nav a{display:flex;gap:10px;padding:.75em .9em;border-radius:var(--r);color:#d6e0fa;cursor:pointer;font-size:.93em}
+nav a:hover{background:rgba(255,255,255,.1)}nav a.on{background:var(--blue);color:#fff;font-weight:600}
 main{display:flex;flex-direction:column;min-width:0}
 .top{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;background:var(--card);border-bottom:1px solid var(--line)}
 #menu{display:none;background:none;border:0;font-size:22px;cursor:pointer}
-.page{padding:22px;flex:1}.page h2{font-size:18px;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.page{padding:22px;flex:1}.page h2{font-size:1.3em;margin-bottom:16px}
+.page.in>*{animation:up .38s cubic-bezier(.2,.8,.2,1) backwards}.page.in>*:nth-child(2){animation-delay:.05s}.page.in>*:nth-child(3){animation-delay:.1s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
-.stat{border-radius:12px;color:#fff;padding:16px 18px;display:flex;flex-direction:column}.stat b{font-size:28px}.stat span{font-size:12px;opacity:.92}
+.stat{border-radius:var(--r);color:#fff;padding:16px 18px;display:flex;flex-direction:column}.stat b{font-size:2em}.stat span{font-size:.86em;opacity:.92}
 .tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}.tools>input,.tools>select{flex:1;min-width:130px}
-.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:var(--bg);text-align:left;padding:10px;font-size:12px;color:var(--mut)}td{padding:10px;border-top:1px solid var(--line)}
-.tag{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.tw{overflow-x:auto;border-radius:var(--r)}table{width:100%;border-collapse:collapse}
+th{background:var(--bg);text-align:left;padding:10px;font-size:.86em;color:var(--mut)}td{padding:10px;border-top:1px solid var(--line)}
+.tag{padding:3px 10px;border-radius:99px;font-size:.8em;font-weight:600;white-space:nowrap;display:inline-block}
 .tg{background:#dcf5e8;color:#0d7a42}.ty{background:#fdf0d4;color:#9a6200}.tr{background:#fde2e3;color:#b3262b}.tb{background:#dde8fd;color:#1b4fb8}.tx{background:#e8ebf2;color:#51607f}
-.ic{background:none;border:0;cursor:pointer;font-size:15px;padding:2px 6px}
+.ic{background:none;border:0;cursor:pointer;font-size:1.1em;padding:2px 6px;border-radius:var(--r)}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fg .w{grid-column:1/-1}
-.mod{position:fixed;inset:0;background:rgba(5,15,40,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
-.mod>div{background:var(--card);border-radius:14px;padding:20px;width:100%;max-width:520px;max-height:90vh;overflow:auto}
-.mod h3{margin-bottom:14px}.act{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}.cg .card{margin:0}.ex1{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.mod{position:fixed;inset:0;background:rgba(5,15,40,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9;animation:fd .2s;backdrop-filter:blur(3px)}
+.mod.out{opacity:0;transition:opacity .2s}
+.mod>div{background:var(--card);border-radius:calc(var(--r) + 2px);padding:20px;width:100%;max-width:520px;max-height:90vh;overflow:auto;animation:pop .3s cubic-bezier(.2,.9,.3,1.15)}.mod>.wide{max-width:780px}
+.mod h3{margin-bottom:14px}.act{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;align-items:center}
+.wq{max-height:42vh;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.wi{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;flex-direction:column;gap:3px}.wi select{margin-top:6px;max-width:220px}.rt{color:var(--ok);font-weight:700}
 .ex{display:grid;grid-template-columns:1fr 300px;gap:16px}
-.bar2{height:8px;background:var(--line);border-radius:8px;overflow:hidden;flex:1}.bar2 i{display:block;height:100%;background:var(--ok)}
-.qt{font-size:17px;font-weight:600;line-height:1.5;margin:14px 0}
-.opt{display:flex;gap:12px;align-items:center;padding:13px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;cursor:pointer;width:100%;text-align:left;background:var(--card)}
-.opt.on{border-color:var(--blue);background:rgba(26,95,224,.1)}
-.dot{width:18px;height:18px;border:2px solid var(--mut);border-radius:50%;flex:none}.opt.on .dot{border:5px solid var(--blue)}
-.tmr b{font-size:28px;color:var(--blue);display:block}
+.bar2{height:8px;background:var(--line);border-radius:99px;overflow:hidden;flex:1}.bar2 i{display:block;height:100%;background:var(--ok);transition:width .4s}
+.qt{font-size:1.2em;font-weight:600;line-height:1.5;margin:14px 0}
+.opt{display:flex;gap:12px;align-items:center;padding:13px 14px;border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;cursor:pointer;width:100%;text-align:left;background:var(--card)}
+.opt.on{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent)}
+.dot{width:18px;height:18px;border:2px solid var(--mut);border-radius:50%;flex:none;transition:border .15s}.opt.on .dot{border:5px solid var(--blue)}
+.tmr b{font-size:2em;color:var(--blue);display:block}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
-.grid button{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:7px 0;cursor:pointer;font-size:12px}
+.grid button{border:1px solid var(--line);background:var(--card);border-radius:calc(var(--r)/2);padding:7px 0;cursor:pointer;font-size:.86em}
 .grid .d{background:var(--ok);color:#fff;border-color:var(--ok)}.grid .c{background:var(--blue);color:#fff;border-color:var(--blue)}
 .row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:14px}
-.center{max-width:480px;margin:8vh auto;text-align:center}.center h2{margin:10px 0}
+.center{max-width:480px;margin:8vh auto;text-align:center;animation:up .4s backwards}.center h2{margin:10px 0}
 .big{font-size:54px;font-weight:700;color:var(--blue)}
+.pick{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border:1px solid var(--line);border-radius:var(--r);cursor:pointer;margin-bottom:8px}
+#tw{position:fixed;top:14px;right:14px;z-index:20;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--card);border-left:4px solid var(--ok);padding:12px 16px;border-radius:var(--r);box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:320px;animation:sl .4s cubic-bezier(.2,.9,.3,1.1)}
+.toast.er{border-color:var(--bad)}.toast.out{animation:slo .35s forwards}
+@keyframes up{from{opacity:0;transform:translateY(14px)}}@keyframes fd{from{opacity:0}}@keyframes pop{from{opacity:0;transform:translateY(16px) scale(.96)}}
+@keyframes sl{from{opacity:0;transform:translateX(120%)}}@keyframes slo{to{opacity:0;transform:translateX(120%)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:860px){.split{grid-template-columns:1fr}.hero{padding:22px 18px}.hero em{margin-top:4px}
-#app{grid-template-columns:1fr}aside{position:fixed;left:-250px;width:240px;z-index:8;transition:left .2s}aside.open{left:0}
+#app{grid-template-columns:1fr}aside{position:fixed;left:-250px;width:240px;z-index:8;transition:left .25s}aside.open{left:0}
 #menu{display:block}.stats{grid-template-columns:1fr 1fr}.ex,.fg{grid-template-columns:1fr}.page{padding:14px}}
 </style>
 </head>
@@ -73,131 +94,246 @@ th{background:var(--bg);text-align:left;padding:10px;font-size:12px;color:var(--
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const FOOT='<div class="foot">Hệ thống phần mềm @ Công an xã Thuần Trung</div>';
-const emb=s=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#e0a82e"/><circle cx="50" cy="50" r="34" fill="#c8202c"/><polygon points="50,24 56,42 76,42 60,54 66,74 50,62 34,74 40,54 24,42 44,42" fill="#ffd84a"/></svg>`;
-const HERO=`<div class="hero">${emb(110)}<h1>CÔNG AN XÃ THUẦN TRUNG</h1><p>Hệ thống thi trắc nghiệm trực tuyến</p><em>"Kỷ cương - Trách nhiệm<br>Hiệu quả - Vì Nhân dân phục vụ"</em></div>`;
 const fmt=d=>d?new Date(d).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-let AT=sessionStorage.getItem('ttadm'),V='dash',MON=null,tm=null,pl=null,S=null,K=null;
+/* ---------- GIAO DIỆN TUỲ CHỈNH ---------- */
+const FF0='Inter,"Segoe UI",Roboto,Arial,sans-serif';
+const DT={menu:'#0a2a6e',acc:'#1a5fe0',bg:'#f3f6fc',ff:'',fs:14,r:12,hz:1.04,zoom:1,logo:'',hero:''};
+const FF={'Mặc định':'','Arial':'Arial,Helvetica,sans-serif','Tahoma':'Tahoma,Geneva,sans-serif','Times New Roman':'"Times New Roman",serif','Georgia':'Georgia,serif','Verdana':'Verdana,sans-serif','Trebuchet':'"Trebuchet MS",sans-serif'};
+let T,SAVED;
+function theme(t){T=t;const d=document.documentElement,s=d.style;s.setProperty('--menu',t.menu);s.setProperty('--blue',t.acc);
+ if(t.bg.toLowerCase()!==DT.bg){s.setProperty('--bg',t.bg);d.dataset.c=1}else{s.removeProperty('--bg');delete d.dataset.c}
+ s.setProperty('--ff',t.ff||FF0);s.setProperty('--fs',t.fs+'px');s.setProperty('--r',t.r+'px');s.setProperty('--hz',t.hz);s.setProperty('--hzb',1+(t.hz-1)/3);
+ t.zoom?d.dataset.z=1:delete d.dataset.z;
+ t.hero?s.setProperty('--hi','url("'+t.hero.replace(/"/g,'%22')+'")'):s.removeProperty('--hi')}
+try{SAVED={...DT,...JSON.parse(localStorage.getItem('ttth')||'{}')}}catch(e){SAVED={...DT}}
+theme(SAVED);
+const lg=s=>T.logo?`<img src="${esc(T.logo)}" width="${s}" height="${s}" style="object-fit:contain;border-radius:var(--r)" alt="">`:`<svg width="${s}" height="${s}" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#e0a82e"/><circle cx="50" cy="50" r="34" fill="#c8202c"/><polygon points="50,24 56,42 76,42 60,54 66,74 50,62 34,74 40,54 24,42 44,42" fill="#ffd84a"/></svg>`;
+const emb=s=>`<span class="lg" data-s="${s}" style="display:inline-flex">${lg(s)}</span>`;
+const relogo=()=>document.querySelectorAll('.lg').forEach(e=>e.innerHTML=lg(+e.dataset.s));
+const HERO=()=>`<div class="hero">${emb(110)}<h1>CÔNG AN XÃ THUẦN TRUNG</h1><p>Hệ thống thi trắc nghiệm trực tuyến</p><em>"Kỷ cương - Trách nhiệm<br>Hiệu quả - Vì Nhân dân phục vụ"</em></div>`;
+/* ---------- TIỆN ÍCH ---------- */
+const tw=document.body.appendChild(Object.assign(document.createElement('div'),{id:'tw'}));
+function toast(m,t){const e=document.createElement('div');e.className='toast '+(t||'');e.textContent=m;tw.appendChild(e);setTimeout(()=>{e.classList.add('out');setTimeout(()=>e.remove(),350)},3200)}
+const ask=m=>new Promise(r=>{const o=document.createElement('div');o.className='mod';o.innerHTML=`<div role="dialog"><p style="margin:4px 0 18px;line-height:1.5">${esc(m)}</p><div class="act"><button class="btn o" data-n>Hủy</button><button class="btn" data-y>Đồng ý</button></div></div>`;document.body.appendChild(o);const c=v=>{o.classList.add('out');setTimeout(()=>o.remove(),200);r(v)};o.querySelector('[data-n]').onclick=()=>c(false);o.querySelector('[data-y]').onclick=()=>c(true)});
+const PW=(id,l,ac)=>`<div><label for="${id}">${l}</label><div class="pw"><input id="${id}" type="password" autocomplete="${ac||'current-password'}"><button type="button" class="eye" aria-label="Hiện/ẩn mật khẩu">👁</button></div></div>`;
+document.addEventListener('click',e=>{const b=e.target.closest('.eye');if(!b)return;const i=b.previousElementSibling,s=i.type==='password';i.type=s?'text':'password';b.textContent=s?'🙈':'👁'});
+const digits=i=>i.oninput=()=>i.value=i.value.replace(/\D/g,'');
+const ADMA=new Set('dash ql qs qd el es ed start end mon res ext qi ainfo apw thset'.split(' ')),USRA=new Set(['join','me','mset','mpw','myex']);
+let AT=sessionStorage.getItem('ttadm'),UT=localStorage.getItem('ttu'),V='',MON=null,tm=null,pl=null,S=null,K=null,CA={};
 const stop=()=>{clearInterval(tm);clearInterval(pl);tm=pl=null};
-async function api(a,d={}){
- const r=await fetch('/api/rpc',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(AT||'')},body:JSON.stringify({a,...d})});
+async function api(a,d={},keep){
+ if(!keep)CA={};
+ const tk=ADMA.has(a)?AT:USRA.has(a)?UT:'';
+ const r=await fetch('/api/rpc',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(tk||'')},body:JSON.stringify({a,...d})});
  const j=await r.json().catch(()=>({e:'Không kết nối được máy chủ'}));
- if(r.status===401&&AT){AT=null;sessionStorage.removeItem('ttadm');go()}
+ if(r.status===401){if(ADMA.has(a)&&AT){AT=null;sessionStorage.removeItem('ttadm');go()}if(USRA.has(a)&&UT){UT=null;localStorage.removeItem('ttu');go()}}
  if(!r.ok)throw new Error(j.e||'Có lỗi xảy ra');return j}
-function go(){stop();if(location.hash==='#admin')AT?adminApp():adminLogin();else{K=JSON.parse(localStorage.getItem('ttx')||'null');K?attempt():home()}}
+/* hiện ngay dữ liệu đã lưu, tải mới ở nền rồi cập nhật nếu thay đổi → chuyển trang rất nhanh */
+async function swr(k,fn,render){const c=CA[k];if(c)render(c);const x=await fn();if(JSON.stringify(x)!==JSON.stringify(c)){CA[k]=x;render(x)}}
+const P=h=>{const p=$('#pg');if(p)p.innerHTML=h};
+const fail=e=>P(`<div class="card err">${esc(e.message)}</div>`);
+function go(){stop();K=null;
+ if(location.hash==='#admin'){AT?app():adminLogin();return}
+ try{K=JSON.parse(localStorage.getItem('ttx')||'null')}catch(e){}
+ if(!UT){localStorage.removeItem('ttx');home()}else if(K)attempt();else app()}
 window.onhashchange=go;
+api('theme',{},1).then(t=>{if(t&&Object.keys(t).length){const n={...DT,...t};if(JSON.stringify(n)!==JSON.stringify(SAVED)){SAVED=n;theme(n);relogo();try{localStorage.setItem('ttth',JSON.stringify(n))}catch(e){}}}}).catch(()=>{});
 
-/* ---------- THÍ SINH ---------- */
-async function home(){
- $('#root').innerHTML=`<div class="split">${HERO}<div class="side"><form class="box" id="jf"><h2>Vào thi</h2><div class="sub">Chọn kỳ thi và nhập thông tin của bạn</div><div id="ex" class="sub">Đang tải danh sách kỳ thi...</div>
- <div><label for="n">Họ và tên *</label><input id="n" maxlength="80"></div><div><label for="u">Đơn vị</label><input id="u" maxlength="80" placeholder="Ví dụ: Công an xã"></div><div><label for="p">Số điện thoại *</label><input id="p" inputmode="tel" maxlength="20"></div>
- <div class="err" id="er"></div><button class="btn" id="go">Vào thi</button><div class="sub"><a href="#admin" style="color:var(--mut)">Đăng nhập quản trị</a></div></form>${FOOT}</div></div>`;
- try{const L=await api('exams');
-  $('#ex').className='';$('#ex').innerHTML=L.length?L.map((e,i)=>`<label class="pick"><input type="radio" name="e" value="${e.id}" ${i?'':'checked'}><span><b>${esc(e.name)}</b><small>${e.mode==='live'?'Thi đồng loạt - bắt đầu khi quản trị mở thi':'Thi tự do - làm bất cứ lúc nào'} · ${e.dur} phút · ${e.cnt} câu</small></span></label>`).join(''):'<div class="sub">Hiện chưa có kỳ thi nào đang mở.</div>';
-  if(!L.length)$('#go').disabled=true;
- }catch(e){$('#ex').textContent=e.message}
- $('#jf').onsubmit=async ev=>{ev.preventDefault();const r=document.querySelector('input[name=e]:checked');if(!r)return;$('#er').textContent='';
-  try{const k=await api('join',{eid:+r.value,name:$('#n').value,unit:$('#u').value,phone:$('#p').value});localStorage.setItem('ttx',JSON.stringify(k));K=k;attempt()}catch(e){$('#er').textContent=e.message}}
+/* ---------- ĐĂNG NHẬP / ĐĂNG KÝ THÍ SINH ---------- */
+function home(){
+ $('#root').innerHTML=`<div class="split">${HERO()}<div class="side"><div class="box"><h2>Cổng thi trực tuyến</h2><div class="tabs"><button class="on" data-t="l">Đăng nhập</button><button data-t="r">Đăng ký</button></div>
+ <form class="fm" id="lf"><div><label for="lc">Số căn cước công dân (12 số)</label><input id="lc" inputmode="numeric" maxlength="12" autocomplete="username"></div>${PW('lp','Mật khẩu')}<div class="err" id="le"></div><button class="btn">Đăng nhập</button></form>
+ <form class="fm" id="rf" hidden><div><label for="rc">Số căn cước công dân (12 số) *</label><input id="rc" inputmode="numeric" maxlength="12"></div><div><label for="rn">Họ và tên *</label><input id="rn" maxlength="80"></div><div><label for="ru">Đơn vị</label><input id="ru" maxlength="80" placeholder="Ví dụ: Công an xã"></div><div><label for="rt">Số điện thoại</label><input id="rt" inputmode="tel" maxlength="20"></div>${PW('rp','Đặt mật khẩu (tối thiểu 6 ký tự) *','new-password')}${PW('rq','Nhập lại mật khẩu *','new-password')}<div class="err" id="re"></div><button class="btn">Tạo tài khoản</button></form>
+ <div class="sub"><a href="#admin" style="color:var(--mut)">Đăng nhập quản trị</a></div></div>${FOOT}</div></div>`;
+ digits($('#lc'));digits($('#rc'));
+ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{const l=b.dataset.t==='l';document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));$('#lf').hidden=!l;$('#rf').hidden=l});
+ const fin=r=>{UT=r.token;localStorage.setItem('ttu',UT);CA={};V='';app()};
+ $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';try{fin(await api('ulogin',{cccd:$('#lc').value,pw:$('#lp').value}))}catch(x){$('#le').textContent=x.message}};
+ $('#rf').onsubmit=async e=>{e.preventDefault();$('#re').textContent='';if($('#rp').value!==$('#rq').value){$('#re').textContent='Mật khẩu nhập lại không khớp';return}
+  try{fin(await api('reg',{cccd:$('#rc').value,name:$('#rn').value,unit:$('#ru').value,phone:$('#rt').value,pw:$('#rp').value}))}catch(x){$('#re').textContent=x.message}};
 }
-function attempt(){
- stop();S={s:''};load();pl=setInterval(load,6000);
+
+/* ---------- KHUNG ỨNG DỤNG DÙNG CHUNG ---------- */
+const NAVS={a:[['dash','🏠','Trang chủ'],['exams','📋','Quản lý kỳ thi'],['bank','📚','Ngân hàng câu hỏi'],['res','✅','Kết quả thi'],['theme','🎨','Giao diện'],['acct','🔐','Tài khoản admin']],
+ u:[['uex','📋','Kỳ thi'],['umy','🏅','Kỳ thi của tôi'],['upf','👤','Hồ sơ của tôi']]};
+function app(v){
+ stop();const k=location.hash==='#admin'?'a':'u',N=NAVS[k];if(v)V=v;if(!N.some(x=>x[0]===V)&&V!=='mon')V=N[0][0];
+ if(!$('#app')||$('#app').dataset.k!==k){
+  $('#root').innerHTML=`<div id="app" data-k="${k}"><aside id="sb"><div class="brand">${emb(38)}<span>CÔNG AN XÃ<br>THUẦN TRUNG</span></div><nav>${N.map(x=>`<a data-v="${x[0]}" tabindex="0" role="button">${x[1]} ${x[2]}</a>`).join('')}</nav><nav style="flex:none"><a id="out" tabindex="0" role="button">🚪 Đăng xuất</a></nav></aside><main><div class="top"><button id="menu" aria-label="Menu">☰</button><span></span><b id="who">${k==='a'?'Quản trị viên':'Thí sinh'}</b></div><div class="page" id="pg"></div>${FOOT}</main></div>`;
+  document.querySelectorAll('nav a[data-v]').forEach(a=>a.onclick=()=>{$('#sb').classList.remove('open');app(a.dataset.v)});
+  $('#out').onclick=()=>{CA={};if(k==='a'){AT=null;sessionStorage.removeItem('ttadm');adminLogin()}else{UT=null;localStorage.removeItem('ttu');localStorage.removeItem('ttx');home()}};
+  $('#menu').onclick=()=>$('#sb').classList.toggle('open');
+  if(k==='u')api('me',{},1).then(m=>{const w=$('#who');if(w)w.textContent=m.name}).catch(()=>{});
+ }
+ document.querySelectorAll('nav a[data-v]').forEach(a=>a.classList.toggle('on',a.dataset.v===V||(V==='mon'&&a.dataset.v==='exams')));
+ if(V!=='theme'&&T!==SAVED){theme(SAVED);relogo()}
+ const pg=$('#pg');if(pg.dataset.v!==V){pg.dataset.v=V;pg.classList.remove('in');void pg.offsetWidth;pg.classList.add('in')}
+ ({dash,exams,mon,bank,res,themeV,acct,uex,umy,upf})[V]().catch(fail);
 }
-async function load(){
- try{const s=await api('state',{...K,light:S.s==='run'});
-  if(s.s==='run'){const first=S.s!=='run';S.off=s.now-Date.now();S.dl=s.dl;if(first){S={s:'run',qs:s.qs,ans:s.ans,i:0,off:S.off,dl:s.dl,name:s.exam};exam();clearInterval(tm);tm=setInterval(tick,1000)}}
-  else if(s.s==='wait'){S.s='wait';$('#root').innerHTML=`<div class="center card"><div>${emb(70)}</div><h2>${esc(s.exam)}</h2><p>Bạn đã vào phòng chờ. Kỳ thi sẽ tự bắt đầu khi quản trị viên mở thi.</p><p class="sub" style="margin-top:10px">Đã có ${s.n} thí sinh trong phòng</p></div>${FOOT}`}
-  else{stop();const d=s.s==='done';$('#root').innerHTML=`<div class="center card"><h2>${esc(s.exam||'')}</h2>${d?`<p>Bài thi đã được nộp. Điểm của bạn</p><div class="big">${s.score}</div><span class="tag ${s.ok?'tg':'tr'}">${s.ok?'Đạt':'Không đạt'}</span>`:'<p>Kỳ thi đã kết thúc.</p>'}<div style="margin-top:20px"><button class="btn" id="hm">Về trang chủ</button></div></div>${FOOT}`;
-   $('#hm').onclick=()=>{localStorage.removeItem('ttx');K=null;home()}}
- }catch(e){if(/không hợp lệ|Không tìm thấy/.test(e.message)){stop();localStorage.removeItem('ttx');home()}}
+function adminLogin(){stop();
+ $('#root').innerHTML=`<div class="split">${HERO()}<div class="side"><form class="box" id="lf"><h2>Đăng nhập hệ thống</h2><div class="sub">Dành cho quản trị viên</div><div><label for="u">Tên đăng nhập</label><input id="u" autocomplete="username"></div>${PW('p','Mật khẩu')}<div class="err" id="er"></div><button class="btn">Đăng nhập</button><div class="sub"><a href="#" style="color:var(--mut)">Về trang thi</a></div></form>${FOOT}</div></div>`;
+ $('#lf').onsubmit=async e=>{e.preventDefault();try{const r=await api('login',{u:$('#u').value.trim(),p:$('#p').value});AT=r.token;sessionStorage.setItem('ttadm',AT);V='dash';app()}catch(x){$('#er').textContent=x.message}}
 }
-function tick(){const s=Math.max(0,Math.round((S.dl-(Date.now()+S.off))/1000)),el=$('#tm');
- if(el)el.textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');if(s<=0){clearInterval(tm);load()}}
-function exam(){
- const n=S.qs.length,q=S.qs[S.i],da=Object.keys(S.ans).length;
- $('#root').innerHTML=`<div style="background:var(--navy);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center">${emb(34)}<div><b>CÔNG AN XÃ THUẦN TRUNG</b><div style="font-size:12px;opacity:.85">${esc(S.name)}</div></div></div>
- <div class="page"><div class="ex"><div class="card"><div class="row" style="margin:0"><b style="white-space:nowrap">Câu hỏi ${S.i+1} / ${n}</b><div class="bar2"><i style="width:${(S.i+1)/n*100}%"></i></div></div>
- <div class="qt">${esc(q.q)}</div>${q.o.map((o,i)=>`<button class="opt ${S.ans[S.i]===i?'on':''}" data-o="${i}"><span class="dot"></span><b>${'ABCD'[i]}.</b> ${esc(o)}</button>`).join('')}
- <div class="row"><button class="btn o" id="pv" ${S.i?'':'disabled'}>‹ Câu trước</button><button class="btn" id="nx" ${S.i<n-1?'':'disabled'}>Câu tiếp ›</button></div></div>
- <div><div class="card tmr"><span class="sub" style="text-align:left;display:block;font-size:12px">Thời gian còn lại</span><b id="tm">--:--:--</b><div style="margin-top:8px;font-size:12px;color:var(--mut)">Đã làm: ${da} · Chưa làm: ${n-da}</div></div>
- <div class="card"><b>Danh sách câu hỏi</b><div class="grid">${S.qs.map((_,i)=>`<button data-g="${i}" class="${i===S.i?'c':S.ans[i]!=null?'d':''}">${i+1}</button>`).join('')}</div></div><button class="btn" style="width:100%" id="sub">Nộp bài</button></div></div></div>${FOOT}`;
- document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const v=+b.dataset.o;S.ans[S.i]=v;api('answer',{...K,i:S.i,v}).catch(()=>{});exam();tick()});
- document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{S.i=+b.dataset.g;exam();tick()});
- $('#pv').onclick=()=>{S.i--;exam();tick()};$('#nx').onclick=()=>{S.i++;exam();tick()};
- $('#sub').onclick=async()=>{if(confirm(`Bạn đã làm ${da}/${n} câu. Nộp bài ngay?`)){try{await api('submit',K);load()}catch(e){alert(e.message)}}};tick();
-}
+const tbl=(h,r)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${r||`<tr><td colspan="${h.length}" style="text-align:center;color:var(--mut)">Chưa có dữ liệu.</td></tr>`}</tbody></table></div>`;
+const act=(sel,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=async()=>{try{if(await fn(b)!==false)toast('Đã cập nhật')}catch(e){toast(e.message,'er')}app()});
 
 /* ---------- QUẢN TRỊ ---------- */
-function adminLogin(){
- $('#root').innerHTML=`<div class="split">${HERO}<div class="side"><form class="box" id="lf"><h2>Đăng nhập hệ thống</h2><div class="sub">Dành cho quản trị viên</div><div><label for="u">Tên đăng nhập</label><input id="u" autocomplete="username"></div><div><label for="p">Mật khẩu</label><input id="p" type="password" autocomplete="current-password"></div><div class="err" id="er"></div><button class="btn">Đăng nhập</button><div class="sub"><a href="#" style="color:var(--mut)">Về trang thi</a></div></form>${FOOT}</div></div>`;
- $('#lf').onsubmit=async e=>{e.preventDefault();try{const r=await api('login',{u:$('#u').value.trim(),p:$('#p').value});AT=r.token;sessionStorage.setItem('ttadm',AT);V='dash';adminApp()}catch(x){$('#er').textContent=x.message}}
-}
-const NAV=[['dash','🏠','Trang chủ'],['exams','📋','Quản lý kỳ thi'],['bank','📚','Ngân hàng câu hỏi'],['res','✅','Kết quả thi']];
-function adminApp(){
- stop();
- $('#root').innerHTML=`<div id="app"><aside id="sb"><div class="brand">${emb(38)}<span>CÔNG AN XÃ<br>THUẦN TRUNG</span></div><nav>${NAV.map(x=>`<a class="${V===x[0]||(V==='mon'&&x[0]==='exams')?'on':''}" data-v="${x[0]}" tabindex="0">${x[1]} ${x[2]}</a>`).join('')}</nav><nav style="flex:none"><a id="out">🚪 Đăng xuất</a></nav></aside><main><div class="top"><button id="menu" aria-label="Menu">☰</button><span></span><b>Quản trị viên</b></div><div class="page" id="pg"></div>${FOOT}</main></div>`;
- document.querySelectorAll('nav a[data-v]').forEach(a=>a.onclick=()=>{V=a.dataset.v;adminApp()});
- $('#out').onclick=()=>{AT=null;sessionStorage.removeItem('ttadm');adminLogin()};
- $('#menu').onclick=()=>$('#sb').classList.toggle('open');
- ({dash,exams,bank,res,mon})[V]().catch(e=>$('#pg').innerHTML=`<div class="card err">${esc(e.message)}</div>`);
-}
-const P=h=>{const p=$('#pg');if(p)p.innerHTML=h};
-const tbl=(h,r)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${r||`<tr><td colspan="${h.length}" style="text-align:center;color:var(--mut)">Chưa có dữ liệu.</td></tr>`}</tbody></table></div>`;
-async function dash(){
- const d=await api('dash'),av=d.avg==null?'-':Math.round(d.avg*10)/10;
+const dash=()=>swr('dash',()=>api('dash',{},1),d=>{const av=d.avg==null?'-':Math.round(d.avg*10)/10;
  P(`<h2>Tổng quan hệ thống</h2><div class="stats"><div class="stat" style="background:#1a8cff"><b>${d.run}</b><span>Kỳ thi đang mở</span></div><div class="stat" style="background:#12a566"><b>${d.att}</b><span>Lượt thí sinh tham gia</span></div><div class="stat" style="background:#f5a623"><b>${d.qn}</b><span>Câu hỏi trong ngân hàng</span></div><div class="stat" style="background:#7a4ee0"><b>${d.done}</b><span>Bài đã nộp</span></div></div>
  <div class="card"><b>Thống kê kết quả</b><p style="margin-top:8px;color:var(--mut)">Đạt: ${d.pass}/${d.done} bài · Điểm trung bình: ${av}</p></div>
- <div class="card"><b>Link cho thí sinh</b><p style="margin-top:8px">Gửi đường link này cho thí sinh: <b>${esc(location.origin)}</b></p></div>`);
-}
+ <div class="card"><b>Link cho thí sinh</b><p style="margin-top:8px">Gửi đường link này cho thí sinh: <b>${esc(location.origin)}</b></p></div>`)});
 const lab=e=>{const n=Date.now();if(e.mode==='live')return e.status==='waiting'?['Phòng chờ','ty']:e.status==='running'&&e.en>n?['Đang thi','tg']:['Đã kết thúc','tx'];return e.status==='open'?['Đang mở','tg']:['Đã đóng','tx']};
 const canStart=e=>e.mode==='live'?e.status==='waiting':e.status!=='open';
 const canEnd=e=>e.mode==='live'?(e.status==='running'&&e.en>Date.now()):e.status==='open';
-async function exams(){
- const L=await api('el');
- P(`<h2>Quản lý kỳ thi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} kỳ thi</span><button class="btn" id="add">+ Tạo kỳ thi mới</button></div>${tbl(['Tên kỳ thi','Chế độ','Làm bài','Trạng thái','Thí sinh','Thao tác'],L.map(e=>{const s=lab(e);return`<tr><td>${esc(e.name)}</td><td>${e.mode==='live'?'Đồng loạt':'Tự do'}</td><td>${e.dur} phút / ${e.cnt} câu</td><td><span class="tag ${s[1]}">${s[0]}</span></td><td>${e.n}</td><td style="white-space:nowrap">${canStart(e)?`<button class="btn s g" data-s="${e.id}">${e.mode==='live'?'Bắt đầu thi':'Mở'}</button> `:''}${canEnd(e)?`<button class="btn s r" data-x="${e.id}">${e.mode==='live'?'Kết thúc':'Đóng'}</button> `:''}<button class="btn s o" data-m="${e.id}">Theo dõi</button><button class="ic" data-d="${e.id}" aria-label="Xóa">🗑️</button></td></tr>`}).join(''))}</div>`);
+const exams=()=>swr('el',()=>api('el',{},1),L=>{
+ P(`<h2>Quản lý kỳ thi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} kỳ thi</span><button class="btn o" id="wd">📄 Thêm câu hỏi từ file Word</button><button class="btn" id="add">+ Tạo kỳ thi mới</button></div>${tbl(['Tên kỳ thi','Chế độ','Làm bài','Trạng thái','Thí sinh','Thao tác'],L.map(e=>{const s=lab(e);return`<tr><td>${esc(e.name)}</td><td>${e.mode==='live'?'Đồng loạt':'Tự do'}</td><td>${e.dur} phút / ${e.cnt} câu</td><td><span class="tag ${s[1]}">${s[0]}</span></td><td>${e.n}</td><td style="white-space:nowrap">${canStart(e)?`<button class="btn s g" data-s="${e.id}">${e.mode==='live'?'Bắt đầu thi':'Mở'}</button> `:''}${canEnd(e)?`<button class="btn s r" data-x="${e.id}">${e.mode==='live'?'Kết thúc':'Đóng'}</button> `:''}<button class="btn s o" data-m="${e.id}">Theo dõi</button><button class="ic" data-d="${e.id}" aria-label="Xóa">🗑️</button></td></tr>`}).join(''))}</div>`);
+ $('#wd').onclick=wordImport;
  $('#add').onclick=()=>modal('Tạo kỳ thi mới',[{k:'name',l:'Tên kỳ thi *',w:1},{k:'mode',l:'Chế độ thi',t:'sel',o:['Thi tự do (làm bất cứ lúc nào)','Thi đồng loạt (admin bắt đầu / kết thúc)'],v:['free','live'],w:1},{k:'dur',l:'Thời gian làm bài (phút)',t:'number'},{k:'cnt',l:'Số câu hỏi',t:'number'},{k:'t1',l:'Mở từ (tùy chọn, thi tự do)',t:'datetime-local'},{k:'t2',l:'Đóng lúc (tùy chọn, thi tự do)',t:'datetime-local'}],{dur:30,cnt:10},o=>api('es',{...o,t1:o.t1?new Date(o.t1).getTime():null,t2:o.t2?new Date(o.t2).getTime():null}));
- const act=(sel,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=async()=>{try{await fn(b)}catch(e){alert(e.message)}adminApp()});
  act('[data-s]',b=>api('start',{id:+b.dataset.s}));
- act('[data-x]',b=>confirm('Kết thúc kỳ thi? Các bài đang làm sẽ được nộp và chấm ngay.')?api('end',{id:+b.dataset.x}):0);
- act('[data-d]',b=>confirm('Xóa kỳ thi và toàn bộ bài làm của kỳ thi này?')?api('ed',{id:+b.dataset.d}):0);
- document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{MON=+b.dataset.m;V='mon';adminApp()});
-}
+ act('[data-x]',async b=>{if(!await ask('Kết thúc kỳ thi? Các bài đang làm sẽ được nộp và chấm ngay.'))return false;await api('end',{id:+b.dataset.x})});
+ act('[data-d]',async b=>{if(!await ask('Xóa kỳ thi và toàn bộ bài làm của kỳ thi này?'))return false;await api('ed',{id:+b.dataset.d})});
+ document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{MON=+b.dataset.m;app('mon')});
+});
 async function mon(){
- const draw=async()=>{try{const {e,at}=await api('mon',{id:MON}),s=lab(e),dn=at.filter(x=>x.done).length;
+ const draw=async()=>{try{const {e,at}=await api('mon',{id:MON},1),s=lab(e),dn=at.filter(x=>x.done).length;
   P(`<div class="tools"><button class="btn s o" id="bk">‹ Quay lại</button><h2 style="margin:0;flex:1">${esc(e.name)}</h2><span class="tag ${s[1]}">${s[0]}</span>${canStart(e)?`<button class="btn s g" id="st">${e.mode==='live'?'Bắt đầu thi':'Mở'}</button>`:''}${canEnd(e)?`<button class="btn s r" id="en">${e.mode==='live'?'Kết thúc':'Đóng'}</button>`:''}${e.mode==='live'&&canEnd(e)?'<button class="btn s o" id="ex5">+5 phút</button>':''}</div>
   <div class="stats"><div class="stat" style="background:#1a8cff"><b>${at.length}</b><span>Đã vào phòng thi</span></div><div class="stat" style="background:#f5a623"><b>${at.length-dn}</b><span>Đang làm / chờ</span></div><div class="stat" style="background:#12a566"><b>${dn}</b><span>Đã nộp</span></div><div class="stat" style="background:#7a4ee0"><b>${at.filter(x=>x.ok).length}</b><span>Đạt</span></div></div>
   <div class="card">${tbl(['Họ và tên','Đơn vị','SĐT','Tiến độ','Trạng thái','Điểm'],at.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td>${esc(x.phone)}</td><td>${x.total?x.got+'/'+x.total:'-'}</td><td><span class="tag ${x.done?(x.ok?'tg':'tr'):x.total?'tb':'ty'}">${x.done?(x.ok?'Đạt':'Không đạt'):x.total?'Đang làm':'Chờ'}</span></td><td>${x.done?x.score:''}</td></tr>`).join(''))}</div>`);
-  $('#bk').onclick=()=>{V='exams';adminApp()};
-  if($('#ex5'))$('#ex5').onclick=async()=>{try{await api('ext',{id:MON,m:5});draw()}catch(x){alert(x.message)}};
-  if($('#st'))$('#st').onclick=async()=>{await api('start',{id:MON});draw()};
-  if($('#en'))$('#en').onclick=async()=>{if(confirm('Kết thúc kỳ thi? Các bài đang làm sẽ được nộp và chấm ngay.')){await api('end',{id:MON});draw()}};
- }catch(e){P(`<div class="card err">${esc(e.message)}</div>`)}};
+  $('#bk').onclick=()=>app('exams');
+  const run=(id,fn)=>{const el=$(id);if(el)el.onclick=async()=>{try{await fn();toast('Đã cập nhật')}catch(x){if(x.message)toast(x.message,'er')}draw()}};
+  run('#ex5',()=>api('ext',{id:MON,m:5}));run('#st',()=>api('start',{id:MON}));
+  run('#en',async()=>{if(!await ask('Kết thúc kỳ thi? Các bài đang làm sẽ được nộp và chấm ngay.'))throw new Error('');await api('end',{id:MON})});
+ }catch(e){fail(e)}};
  await draw();pl=setInterval(draw,5000);
 }
-async function bank(){
- const L=await api('ql');
- P(`<h2>Ngân hàng câu hỏi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} câu hỏi</span><button class="btn o" id="imp">Nhập hàng loạt</button><button class="btn" id="add">+ Thêm câu hỏi</button></div>${tbl(['STT','Nội dung câu hỏi','Môn học','Mức độ','Thao tác'],L.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.q)}</td><td>${esc(x.subj)}</td><td>${esc(x.lvl)}</td><td style="white-space:nowrap"><button class="ic" data-e="${x.id}" aria-label="Sửa">✏️</button><button class="ic" data-d="${x.id}" aria-label="Xóa">🗑️</button></td></tr>`).join(''))}</div>`);
+const bank=()=>swr('ql',()=>api('ql',{},1),L=>{
+ P(`<h2>Ngân hàng câu hỏi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} câu hỏi</span><button class="btn o" id="wd">📄 Nhập từ Word</button><button class="btn o" id="imp">Nhập hàng loạt</button><button class="btn" id="add">+ Thêm câu hỏi</button></div>${tbl(['STT','Nội dung câu hỏi','Môn học','Mức độ','Thao tác'],L.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.q)}</td><td>${esc(x.subj)}</td><td>${esc(x.lvl)}</td><td style="white-space:nowrap"><button class="ic" data-e="${x.id}" aria-label="Sửa">✏️</button><button class="ic" data-d="${x.id}" aria-label="Xóa">🗑️</button></td></tr>`).join(''))}</div>`);
  const F=[{k:'q',l:'Nội dung câu hỏi *',t:'ta',w:1},...'ABCD'.split('').map((c,i)=>({k:'o'+i,l:'Đáp án '+c+(i<2?' *':'')})),{k:'a',l:'Đáp án đúng',t:'sel',o:['A','B','C','D'],v:[0,1,2,3]},{k:'subj',l:'Môn học'},{k:'lvl',l:'Mức độ',t:'sel',o:['Dễ','Trung bình','Khó']}];
  const sv=id=>o=>api('qs',{id,q:o.q,o:[o.o0,o.o1,o.o2,o.o3].filter(Boolean),a:o.a,subj:o.subj||'Pháp luật',lvl:o.lvl});
+ $('#wd').onclick=wordImport;
  $('#add').onclick=()=>modal('Thêm câu hỏi',F,{subj:'Pháp luật'},sv(0));
  $('#imp').onclick=()=>modal('Nhập hàng loạt',[{k:'t',l:'Mỗi dòng 1 câu: Câu hỏi | A | B | C | D | Đáp án đúng (A-D) | Môn | Mức độ',t:'ta',w:1}],{},async o=>{
   const list=o.t.split('\n').map(l=>l.split('|').map(s=>s.trim())).filter(c=>c.length>=6&&c[0]).map(c=>({q:c[0],o:c.slice(1,5),a:'ABCD'.indexOf((c[5]||'').toUpperCase()),s:c[6],l:c[7]}));
   if(!list.length)throw new Error('Không đọc được dòng nào. Cần: Câu hỏi | A | B | C | D | Đáp án');
-  const r=await api('qi',{list});alert('Đã nhập '+r.n+'/'+list.length+' câu hỏi')});
+  const r=await api('qi',{list});toast('Đã nhập '+r.n+'/'+list.length+' câu hỏi')});
  document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{const x=L.find(k=>k.id==b.dataset.e);modal('Sửa câu hỏi',F,{q:x.q,o0:x.o[0],o1:x.o[1],o2:x.o[2],o3:x.o[3],a:x.a,subj:x.subj,lvl:x.lvl},sv(x.id))});
- document.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(confirm('Xóa câu hỏi này?')){await api('qd',{id:+b.dataset.d});adminApp()}});
-}
-async function res(){
- const L=await api('res');
+ act('[data-d]',async b=>{if(!await ask('Xóa câu hỏi này?'))return false;await api('qd',{id:+b.dataset.d})});
+});
+const res=()=>swr('res',()=>api('res',{},1),L=>{
  P(`<h2>Kết quả thi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} kết quả</span><button class="btn o" id="csv">Xuất CSV</button></div>${tbl(['STT','Họ và tên','Đơn vị','Kỳ thi','Điểm','Nộp lúc','Kết quả'],L.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td>${esc(x.exam)}</td><td>${x.score}</td><td>${fmt(x.sub)}</td><td><span class="tag ${x.ok?'tg':'tr'}">${x.ok?'Đạt':'Không đạt'}</span></td></tr>`).join(''))}</div>`);
  $('#csv').onclick=()=>{const c='\ufeffHọ tên,Đơn vị,SĐT,Kỳ thi,Điểm,Nộp lúc,Kết quả\n'+L.map(x=>[x.name,x.unit,x.phone,x.exam,x.score,fmt(x.sub),x.ok?'Đạt':'Không đạt'].map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='ket-qua-thi.csv';a.click()};
+});
+/* --- Giao diện --- */
+const img=(f,max,type)=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const m=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*m);c.height=Math.round(i.height*m);c.getContext('2d').drawImage(i,0,0,c.width,c.height);ok(c.toDataURL(type,.78))};i.onerror=()=>no(new Error('Không đọc được ảnh'));i.src=r.result};r.readAsDataURL(f)});
+async function themeV(){
+ const t={...T},cl=(k,l)=>`<div><label>${l}</label><input type="color" data-t="${k}" value="${t[k]}"></div>`,rg=(k,l,a,z,st,u)=>`<div><label>${l}: <span id="v_${k}">${t[k]}</span>${u}</label><input type="range" data-t="${k}" min="${a}" max="${z}" step="${st}" value="${t[k]}"></div>`,im=(k,l)=>`<div class="w"><label>${l}</label><div class="tools" style="margin:0"><input data-u="${k}" placeholder="Dán đường dẫn ảnh (https://...) hoặc chọn từ máy" value="${t[k].startsWith('data:')?'':esc(t[k])}"><button type="button" class="btn s o" data-p="${k}">Chọn ảnh từ máy</button><button type="button" class="btn s o" data-c="${k}">Xóa ảnh</button><input type="file" accept="image/*" data-f="${k}" hidden></div></div>`;
+ P(`<h2>Giao diện</h2><div class="card"><div class="fg">${cl('menu','Màu menu')}${cl('acc','Màu nút / điểm nhấn')}${cl('bg','Màu nền')}
+ <div><label>Font chữ</label><select data-t="ff">${Object.entries(FF).map(([n,v])=>`<option value="${esc(v)}" ${v===t.ff?'selected':''}>${n}</option>`).join('')}</select></div>
+ ${rg('fs','Cỡ chữ',12,18,1,'px')}${rg('r','Bo tròn góc',0,28,1,'px')}${rg('hz','Mức phóng to khi di chuột',1,1.12,.01,'×')}<div><label>Hiệu ứng phóng to khi di chuột</label><select data-t="zoom"><option value="1" ${t.zoom?'selected':''}>Bật</option><option value="0" ${t.zoom?'':'selected'}>Tắt</option></select></div>
+ ${im('logo','Logo (ảnh vuông, nền trong suốt càng tốt)')}${im('hero','Ảnh nền trang đăng nhập')}
+ <div class="act w"><span class="sub" style="margin-right:auto">Thay đổi được xem trước ngay, bấm Lưu để áp dụng cho mọi người.</span><button class="btn o" id="rs">Về mặc định</button><button class="btn" id="sv">Lưu giao diện</button></div></div></div>`);
+ const cur=()=>{theme({...t});relogo()};
+ document.querySelectorAll('[data-t]').forEach(i=>i.oninput=()=>{const k=i.dataset.t;t[k]=['fs','r','hz','zoom'].includes(k)?+i.value:i.value;const v=$('#v_'+k);if(v)v.textContent=t[k];cur()});
+ document.querySelectorAll('[data-u]').forEach(i=>i.onchange=()=>{t[i.dataset.u]=i.value.trim();cur()});
+ document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>b.parentNode.querySelector('[data-f]').click());
+ document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{t[b.dataset.c]='';b.parentNode.querySelector('[data-u]').value='';cur()});
+ document.querySelectorAll('[data-f]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const k=i.dataset.f;t[k]=k==='logo'?await img(f,256,'image/png'):await img(f,1280,'image/jpeg');cur();toast('Đã chọn ảnh')}catch(e){toast(e.message,'er')}});
+ $('#rs').onclick=()=>{theme({...DT});relogo();themeV()};
+ $('#sv').onclick=async()=>{try{await api('thset',{t});SAVED={...t};try{localStorage.setItem('ttth',JSON.stringify(t))}catch(e){}theme(SAVED);toast('Đã lưu giao diện')}catch(e){toast(e.message,'er')}};
 }
+/* --- Tài khoản admin --- */
+const acct=()=>swr('ainfo',()=>api('ainfo',{},1),a=>{
+ P(`<h2>Tài khoản quản trị</h2><div class="card" style="max-width:480px"><form class="fm" id="af"><div><label for="au">Tên đăng nhập</label><input id="au" value="${esc(a.u)}" autocomplete="username"></div>${PW('ao','Mật khẩu hiện tại')}${PW('an','Mật khẩu mới (tối thiểu 6 ký tự)','new-password')}${PW('ac','Nhập lại mật khẩu mới','new-password')}<div class="err" id="ae"></div><button class="btn">Lưu thay đổi</button></form></div>`);
+ $('#af').onsubmit=async e=>{e.preventDefault();$('#ae').textContent='';if($('#an').value!==$('#ac').value){$('#ae').textContent='Mật khẩu nhập lại không khớp';return}
+  try{await api('apw',{old:$('#ao').value,nu:$('#au').value,np:$('#an').value});toast('Đã đổi tài khoản / mật khẩu');['ao','an','ac'].forEach(i=>$('#'+i).value='');CA={}}catch(x){$('#ae').textContent=x.message}};
+});
 function modal(title,fields,vals,ok){
  const m=document.createElement('div');m.className='mod';
  m.innerHTML=`<div role="dialog"><h3>${title}</h3><form class="fg">${fields.map(f=>`<div class="${f.w?'w':''}"><label>${f.l}</label>${f.t==='sel'?`<select name="${f.k}">${f.o.map((o,i)=>`<option value="${f.v?f.v[i]:o}">${o}</option>`).join('')}</select>`:f.t==='ta'?`<textarea name="${f.k}" rows="3"></textarea>`:`<input name="${f.k}" type="${f.t||'text'}">`}</div>`).join('')}<div class="act w"><span class="err" id="me" style="margin-right:auto"></span><button type="button" class="btn o" id="mc">Hủy</button><button class="btn">Lưu</button></div></form></div>`;
  document.body.appendChild(m);const f=m.querySelector('form');
  fields.forEach(x=>{if(vals&&vals[x.k]!=null)f.elements[x.k].value=vals[x.k]});
- m.querySelector('#mc').onclick=()=>m.remove();
+ const close=()=>{m.classList.add('out');setTimeout(()=>m.remove(),200)};
+ m.querySelector('#mc').onclick=close;
  f.onsubmit=async e=>{e.preventDefault();const o={};fields.forEach(x=>o[x.k]=f.elements[x.k].value.trim());
-  try{await ok(o);m.remove();adminApp()}catch(x){m.querySelector('#me').textContent=x.message}}
+  try{await ok(o);close();toast('Đã lưu');app()}catch(x){m.querySelector('#me').textContent=x.message}}
+}
+/* --- Nhập câu hỏi từ file Word (.docx): nhận diện đáp án in đậm / tô màu / highlight / dòng "Đáp án: X" --- */
+let JZ;const jz=()=>window.JSZip?Promise.resolve():JZ||(JZ=new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=ok;s.onerror=()=>{JZ=null;no(new Error('Không tải được thư viện đọc Word (cần kết nối Internet)'))};document.head.appendChild(s)}));
+async function parseDocx(file){
+ await jz();const z=await JSZip.loadAsync(await file.arrayBuffer()),f=z.file('word/document.xml');if(!f)throw new Error('File không đúng định dạng .docx');
+ const W='http://schemas.openxmlformats.org/wordprocessingml/2006/main',x=new DOMParser().parseFromString(await f.async('string'),'application/xml');
+ const mk=r=>{const p=[...r.children].find(c=>c.localName==='rPr');if(!p)return false;const g=n=>[...p.children].find(c=>c.localName===n),v=(e,a)=>e&&e.getAttributeNS(W,a||'val');
+  const b=g('b');if(b&&!['0','false','off'].includes(v(b)))return true;
+  const c=g('color');if(c&&!['000000','auto','ffffff'].includes((v(c)||'').toLowerCase()))return true;
+  const h=g('highlight');if(h&&v(h)!=='none')return true;
+  const s=g('shd');if(s&&!['auto','ffffff',''].includes((v(s,'fill')||'').toLowerCase()))return true;return false};
+ const L=[...x.getElementsByTagNameNS(W,'p')].map(p=>{const R=[...p.getElementsByTagNameNS(W,'r')].map(r=>({s:[...r.getElementsByTagNameNS(W,'t')].map(e=>e.textContent).join(''),m:mk(r)})),full=R.map(r=>r.s).join(''),lm=/^\s*([A-Da-d])\s*[\.\):]\s*/.exec(full),sk=lm?lm[0].length:0;
+  let pos=0,tot=0,mm=0;for(const r of R){for(const ch of r.s){if(pos++>=sk&&/\S/.test(ch)){tot++;if(r.m)mm++}}}
+  return{t:full.trim(),opt:lm?{k:'ABCD'.indexOf(lm[1].toUpperCase()),t:full.slice(sk).trim()}:null,m:tot>0&&mm/tot>=.5}}).filter(p=>p.t);
+ const G=[];let c=null;const fin=()=>{if(c&&c.q&&c.o.length>=2){if(c.mk.length===1)c.a=c.mk[0];G.push(c)}c=null};
+ for(const p of L){
+  const an=/^(đáp\s*án|dap\s*an|đ\/a|answer|key)\s*(đúng)?\s*[:\-\.]?\s*([A-Da-d])\b/i.exec(p.t);
+  if(p.opt&&c&&p.opt.k===c.o.length){c.o.push(p.opt.t);if(p.m)c.mk.push(c.o.length-1)}
+  else if(an&&c)c.a=c.a>=0?c.a:'ABCD'.indexOf(an[3].toUpperCase());
+  else{const q=p.t.replace(/^(câu\s*)?\d+\s*[\.\):]\s*/i,'');if(c&&c.o.length===0)c.q+=' '+q;else{fin();c={q,o:[],a:-1,mk:[]}}}
+ }
+ fin();return G.slice(0,500);
+}
+function wordImport(){
+ let G=[];const m=document.createElement('div');m.className='mod';
+ m.innerHTML=`<div role="dialog" class="wide"><h3>Thêm câu hỏi từ file Word</h3><p class="sub" style="text-align:left;margin-bottom:10px;line-height:1.5">Chọn file .docx: mỗi câu có nội dung và các đáp án A, B, C, D (mỗi đáp án một dòng). Đáp án đúng được nhận diện theo chữ <b>in đậm</b>, chữ <span style="color:#c8202c">tô màu khác</span>, highlight, hoặc dòng “Đáp án: B”.</p><input type="file" id="wf" accept=".docx"><div id="wl"></div><div class="fg" style="margin-top:12px"><div><label>Môn học</label><input id="ws" value="Pháp luật"></div><div><label>Mức độ</label><select id="wv"><option>Dễ</option><option selected>Trung bình</option><option>Khó</option></select></div></div><div class="act"><span class="err" id="we" style="margin-right:auto"></span><button class="btn o" id="wc">Đóng</button><button class="btn" id="wo" disabled>Nhập vào ngân hàng</button></div></div>`;
+ document.body.appendChild(m);const q=s=>m.querySelector(s),close=()=>{m.classList.add('out');setTimeout(()=>m.remove(),200)};
+ const draw=()=>{const ok=G.filter(g=>g.a>=0).length,sc=q('.wq')?q('.wq').scrollTop:0;
+  q('#wl').innerHTML=`<p style="margin-top:12px"><b>${G.length}</b> câu đọc được · <span style="color:var(--ok)">${ok} đã có đáp án</span>${G.length-ok?` · <span style="color:var(--bad)">${G.length-ok} chưa rõ đáp án (chọn tay, nếu không sẽ bị bỏ qua)</span>`:''}</p><div class="wq">${G.map((g,i)=>`<div class="wi"><div><b>${i+1}.</b> ${esc(g.q)}</div>${g.o.map((o,k)=>`<div class="${g.a===k?'rt':''}">${'ABCD'[k]}. ${esc(o)}${g.a===k?' ✓':''}</div>`).join('')}<select data-i="${i}"><option value="-1">Chọn đáp án đúng…</option>${g.o.map((_,k)=>`<option value="${k}" ${g.a===k?'selected':''}>Đáp án ${'ABCD'[k]}</option>`).join('')}</select></div>`).join('')}</div>`;
+  q('.wq').scrollTop=sc;q('#wo').disabled=!ok;q('#wo').textContent=ok?`Nhập ${ok} câu vào ngân hàng`:'Nhập vào ngân hàng';
+  m.querySelectorAll('[data-i]').forEach(s=>s.onchange=()=>{G[+s.dataset.i].a=+s.value;draw()})};
+ q('#wc').onclick=close;
+ q('#wf').onchange=async e=>{const f=e.target.files[0];if(!f)return;q('#we').textContent='Đang đọc file...';try{G=await parseDocx(f);q('#we').textContent=G.length?'':'Không tìm thấy câu hỏi nào. Kiểm tra lại định dạng A. B. C. D.';if(G.length)draw()}catch(x){q('#we').textContent=x.message}};
+ q('#wo').onclick=async()=>{const list=G.filter(g=>g.a>=0).map(g=>({q:g.q,o:g.o.slice(0,4),a:g.a,s:q('#ws').value.trim()||'Pháp luật',l:q('#wv').value}));
+  try{const r=await api('qi',{list});close();toast('Đã nhập '+r.n+' câu hỏi vào ngân hàng');if(V==='bank'||V==='exams')app()}catch(x){q('#we').textContent=x.message}};
+}
+
+/* ---------- THÍ SINH ---------- */
+const stt=m=>m.done?['Đã nộp',m.ok?'tg':'tr']:(m.mode==='live'&&(m.status==='ended'||(m.status==='running'&&m.en<=Date.now()))?['Đã kết thúc','tx']:[m.st?'Đang làm':'Chờ thi','tb']);
+const uex=()=>swr('uex',()=>Promise.all([api('exams',{},1),api('myex',{},1)]),([L,M])=>{
+ P(`<h2>Kỳ thi đang mở</h2>${L.length?`<div class="cg">${L.map(e=>{const a=M.find(m=>m.eid===e.id);return`<div class="card ex1"><b>${esc(e.name)}</b><span class="sub" style="text-align:left">${e.mode==='live'?'Thi đồng loạt - bắt đầu khi quản trị mở thi':'Thi tự do - làm bất cứ lúc nào'} · ${e.dur} phút · ${e.cnt} câu</span>${a&&a.done?`<span class="tag ${a.ok?'tg':'tr'}">Đã nộp · ${a.score} điểm</span>`:`<button class="btn" data-j="${e.id}">${a?'Tiếp tục thi':'Vào thi'}</button>`}</div>`}).join('')}</div>`:'<div class="card sub">Hiện chưa có kỳ thi nào đang mở.</div>'}`);
+ document.querySelectorAll('[data-j]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{K=await api('join',{eid:+b.dataset.j});localStorage.setItem('ttx',JSON.stringify(K));attempt()}catch(e){toast(e.message,'er');b.disabled=false}});
+});
+const umy=()=>swr('umy',()=>api('myex',{},1),M=>{
+ P(`<h2>Kỳ thi của tôi</h2><div class="card">${tbl(['Kỳ thi','Trạng thái','Điểm','Kết quả','Nộp lúc',''],M.map(m=>{const s=stt(m);return`<tr><td>${esc(m.name)}</td><td><span class="tag ${s[1]}">${s[0]}</span></td><td>${m.done?m.score:'-'}</td><td>${m.done?`<span class="tag ${m.ok?'tg':'tr'}">${m.ok?'Đạt':'Không đạt'}</span>`:'-'}</td><td>${fmt(m.sub)}</td><td>${!m.done&&s[1]==='tb'?`<button class="btn s" data-r="${m.aid}" data-t="${m.tok}">Tiếp tục</button>`:''}</td></tr>`}).join(''))}</div>`);
+ document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{K={aid:b.dataset.r,tok:b.dataset.t};localStorage.setItem('ttx',JSON.stringify(K));attempt()});
+});
+const upf=()=>swr('me',()=>api('me',{},1),u=>{
+ P(`<h2>Hồ sơ của tôi</h2><div class="cg" style="align-items:start"><div class="card"><b>Thông tin cá nhân</b><form class="fm" id="pf" style="margin-top:12px"><div><label>Số căn cước công dân</label><input value="${esc(u.cccd)}" disabled></div><div><label for="pn">Họ và tên</label><input id="pn" maxlength="80" value="${esc(u.name)}"></div><div><label for="pu">Đơn vị</label><input id="pu" maxlength="80" value="${esc(u.unit)}"></div><div><label for="pt">Số điện thoại</label><input id="pt" inputmode="tel" maxlength="20" value="${esc(u.phone)}"></div><div class="err" id="pe"></div><button class="btn">Lưu thông tin</button></form></div>
+ <div class="card"><b>Đổi mật khẩu</b><form class="fm" id="wf2" style="margin-top:12px">${PW('o1','Mật khẩu hiện tại')}${PW('n1','Mật khẩu mới (tối thiểu 6 ký tự)','new-password')}${PW('n2','Nhập lại mật khẩu mới','new-password')}<div class="err" id="we2"></div><button class="btn">Đổi mật khẩu</button></form></div></div>`);
+ $('#pf').onsubmit=async e=>{e.preventDefault();$('#pe').textContent='';try{await api('mset',{name:$('#pn').value,unit:$('#pu').value,phone:$('#pt').value});$('#who').textContent=$('#pn').value;toast('Đã lưu thông tin')}catch(x){$('#pe').textContent=x.message}};
+ $('#wf2').onsubmit=async e=>{e.preventDefault();$('#we2').textContent='';if($('#n1').value!==$('#n2').value){$('#we2').textContent='Mật khẩu nhập lại không khớp';return}
+  try{await api('mpw',{old:$('#o1').value,np:$('#n1').value});['o1','n1','n2'].forEach(i=>$('#'+i).value='');toast('Đã đổi mật khẩu')}catch(x){$('#we2').textContent=x.message}};
+});
+function attempt(){stop();S={s:''};load();pl=setInterval(load,6000)}
+const leave=()=>{stop();localStorage.removeItem('ttx');K=null;CA={};V='';go()};
+async function load(){
+ try{const s=await api('state',{...K,light:S.s==='run'},1);
+  if(s.s==='run'){const first=S.s!=='run';S.off=s.now-Date.now();S.dl=s.dl;if(first){S={s:'run',qs:s.qs,ans:s.ans,i:0,off:S.off,dl:s.dl,name:s.exam};exam();clearInterval(tm);tm=setInterval(tick,1000)}}
+  else if(s.s==='wait'){S.s='wait';$('#root').innerHTML=`<div class="center card"><div>${emb(70)}</div><h2>${esc(s.exam)}</h2><p>Bạn đã vào phòng chờ. Kỳ thi sẽ tự bắt đầu khi quản trị viên mở thi.</p><p class="sub" style="margin:10px 0 16px">Đã có ${s.n} thí sinh trong phòng</p><button class="btn o" id="lv">Thoát phòng chờ</button></div>${FOOT}`;$('#lv').onclick=leave}
+  else{stop();const d=s.s==='done';$('#root').innerHTML=`<div class="center card"><h2>${esc(s.exam||'')}</h2>${d?`<p>Bài thi đã được nộp. Điểm của bạn</p><div class="big">${s.score}</div><span class="tag ${s.ok?'tg':'tr'}">${s.ok?'Đạt':'Không đạt'}</span>`:'<p>Kỳ thi đã kết thúc.</p>'}<div style="margin-top:20px"><button class="btn" id="hm">Về trang chủ</button></div></div>${FOOT}`;
+   $('#hm').onclick=()=>{V='umy';leave()}}
+ }catch(e){if(/không hợp lệ|Không tìm thấy/.test(e.message))leave()}
+}
+function tick(){const s=Math.max(0,Math.round((S.dl-(Date.now()+S.off))/1000)),el=$('#tm');
+ if(el)el.textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');if(s<=0){clearInterval(tm);load()}}
+function exam(){
+ const n=S.qs.length,q=S.qs[S.i],da=Object.keys(S.ans).length;
+ $('#root').innerHTML=`<div style="background:var(--menu);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center">${emb(34)}<div><b>CÔNG AN XÃ THUẦN TRUNG</b><div style="font-size:.86em;opacity:.85">${esc(S.name)}</div></div></div>
+ <div class="page"><div class="ex"><div class="card"><div class="row" style="margin:0"><b style="white-space:nowrap">Câu hỏi ${S.i+1} / ${n}</b><div class="bar2"><i style="width:${(S.i+1)/n*100}%"></i></div></div>
+ <div class="qt">${esc(q.q)}</div>${q.o.map((o,i)=>`<button class="opt ${S.ans[S.i]===i?'on':''}" data-o="${i}"><span class="dot"></span><b>${'ABCD'[i]}.</b> ${esc(o)}</button>`).join('')}
+ <div class="row"><button class="btn o" id="pv" ${S.i?'':'disabled'}>‹ Câu trước</button><button class="btn" id="nx" ${S.i<n-1?'':'disabled'}>Câu tiếp ›</button></div></div>
+ <div><div class="card tmr"><span class="sub" style="text-align:left;display:block;font-size:.86em">Thời gian còn lại</span><b id="tm">--:--:--</b><div style="margin-top:8px;font-size:.86em;color:var(--mut)">Đã làm: ${da} · Chưa làm: ${n-da}</div></div>
+ <div class="card"><b>Danh sách câu hỏi</b><div class="grid">${S.qs.map((_,i)=>`<button data-g="${i}" class="${i===S.i?'c':S.ans[i]!=null?'d':''}">${i+1}</button>`).join('')}</div></div><button class="btn" style="width:100%" id="sub">Nộp bài</button></div></div></div>${FOOT}`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const v=+b.dataset.o;S.ans[S.i]=v;api('answer',{...K,i:S.i,v},1).catch(()=>{});exam();tick()});
+ document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{S.i=+b.dataset.g;exam();tick()});
+ $('#pv').onclick=()=>{S.i--;exam();tick()};$('#nx').onclick=()=>{S.i++;exam();tick()};
+ $('#sub').onclick=async()=>{if(await ask(`Bạn đã làm ${da}/${n} câu. Nộp bài ngay?`)){try{await api('submit',K,1);load()}catch(e){toast(e.message,'er')}}};tick();
 }
 go();
 </script>
