@@ -85,42 +85,8 @@ body:not(.nz) .stat:hover,body:not(.nz) .btn:hover,body:not(.nz) nav a:hover,bod
 .card label{font-size:12px;color:var(--mut);font-weight:600;display:block;margin-bottom:4px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .qi{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:14px;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:16px}
-.qo{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:6px 0;font-size:13px;color:var(--mut)}.qo .ok{color:var(--ok);font-weight:700}.qa{display:flex;gap:6px;flex-shrink:0}
+.qo{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:6px 0;font-size:13px;color:var(--mut)}.qo .ok{color:var(--ok);font-weight:700}.qa{display:flex;gap:6px;flex-shrink:0}.qi.in{border-color:var(--blue);background:rgba(26,95,224,.07)}
 @media(max-width:640px){.qi{flex-direction:column}.qo{grid-template-columns:1fr}}
-
-/* ===== Cổng thí sinh, ảnh nền tùy biến ===== */
-:root{--gold:#c9962b}
-aside{background:var(--menuimg,var(--navy))}
-main{background:var(--pageimg,transparent)}
-.ct{font-size:16px;margin-bottom:2px}.cs{color:var(--mut);margin-bottom:14px}
-.ig{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.im{display:flex;gap:14px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px}
-.im small{display:block;color:var(--mut);margin-top:2px;font-size:12px}
-.im .th{width:96px;height:64px;border-radius:10px;background:var(--bg) center/cover no-repeat;border:1px dashed var(--line);flex:none;display:grid;place-items:center;font-size:11px;color:var(--mut)}
-.eh{display:flex;gap:12px;align-items:center;padding:10px 22px;color:#fff;background:var(--examimg,var(--navy))}.eh b{display:block}.eh div div{font-size:12px;opacity:.85}
-.pt{min-height:calc(100vh/var(--z));display:flex;flex-direction:column}.pt .pm{flex:1}
-.ph{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 28px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-.ph .nm{display:flex;gap:12px;align-items:center;font-weight:700;line-height:1.25;min-width:0}.ph .nm small{display:block;font-weight:500;color:var(--mut);font-size:12px}
-.me{display:flex;align-items:center;gap:10px}.mn{line-height:1.25;text-align:right}.mn small{display:block;color:var(--mut);font-size:12px}
-.av{width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;flex:none}.av.big{width:52px;height:52px;font-size:20px}
-.pb{color:#fff;background:var(--portalimg,linear-gradient(120deg,var(--navy),#12409a 65%,#1b4eb8));padding:36px 28px 72px;border-bottom:4px solid var(--gold)}
-.pbi{max-width:1080px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
-.pb h1{font-size:27px;line-height:1.25}.pb p{opacity:.88;margin-top:6px}
-.kp{display:flex}.kp div{padding:0 22px;border-left:1px solid rgba(255,255,255,.3)}.kp div:first-child{border:0;padding-left:0}.kp div:last-child{padding-right:0}.kp b{font-size:28px;display:block;line-height:1.2}.kp span{font-size:12px;opacity:.88}
-.pm{max-width:1080px;margin:-38px auto 0;padding:0 28px;width:100%}
-.tb2{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:5px;box-shadow:0 8px 24px rgba(10,30,80,.12);margin-bottom:18px;overflow-x:auto}
-.tb2 button{flex:1;display:flex;gap:8px;align-items:center;justify-content:center;border:0;background:none;padding:11px 14px;border-radius:12px;cursor:pointer;font-weight:600;color:var(--mut);white-space:nowrap}
-.tb2 button.on{background:var(--navy);color:#fff}
-.xg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.xc{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--blue);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
-.xc.live{border-top-color:var(--gold)}.xc h3{font-size:17px;line-height:1.35}
-.xh{display:flex;gap:6px;flex-wrap:wrap}.xm{display:flex;gap:18px;color:var(--mut);flex-wrap:wrap}.xm span{display:flex;gap:6px;align-items:center}
-.xs{color:var(--mut);font-size:13px}.xc .btn{margin-top:auto}
-.emp{text-align:center;padding:44px 20px;color:var(--mut)}.emp h3{color:var(--tx);margin:12px 0 4px}
-.sc{display:flex;align-items:center;gap:10px}.sc i{display:block;width:90px;height:6px;border-radius:6px;background:var(--line);overflow:hidden}.sc u{display:block;height:100%;background:var(--ok)}.sc.bad u{background:var(--bad)}
-.pg2{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start}
-.ph2{display:flex;gap:14px;align-items:center;margin-bottom:16px}.ph2 p{color:var(--mut);margin-top:2px}
-@media(max-width:860px){.pb{padding:26px 16px 66px}.pm{padding:0 14px}.ph{padding:10px 14px}.mn{display:none}.pg2,.ig{grid-template-columns:1fr}.kp div{padding:0 14px}.pb h1{font-size:22px}}
 </style>
 </head>
 <body>
@@ -128,20 +94,21 @@ main{background:var(--pageimg,transparent)}
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const FOOT=()=>`<div class="foot">${esc(T('foot'))}</div>`;
+const FOOT='<div class="foot">Hệ thống phần mềm @ Công an xã Thuần Trung</div>';
 const emb0=s=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#e0a82e"/><circle cx="50" cy="50" r="34" fill="#c8202c"/><polygon points="50,24 56,42 76,42 60,54 66,74 50,62 34,74 40,54 24,42 44,42" fill="#ffd84a"/></svg>`;
-const HERO=()=>`<div class="hero">${emb(110)}<h1>${esc(T('org'))}</h1><p>${esc(T('sys'))}</p><em>“${esc(T('s1'))}<br>${esc(T('s2'))}”</em></div>`;
+const HERO=()=>`<div class="hero">${emb(110)}<h1>CÔNG AN XÃ THUẦN TRUNG</h1><p>Hệ thống thi trắc nghiệm trực tuyến</p><em>"Kỷ cương - Trách nhiệm<br>Hiệu quả - Vì Nhân dân phục vụ"</em></div>`;
 const fmt=d=>d?new Date(d).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
 let AT=sessionStorage.getItem('ttadm'),V='dash',MON=null,tm=null,pl=null,S=null,K=null;
 const stop=()=>{clearInterval(tm);clearInterval(pl);tm=pl=null};
-const RD=new Set(['dash','ql','el','res','ul']),MU=new Set(['qs','qd','qda','es','ed','start','end','ext','qi','themeset','chpw','ures','ud']),MC={};
+const RD=new Set(['dash','ql','el','res','ul']),MU=new Set(['qs','qd','qda','esel','qcp','es','ed','start','end','ext','qi','themeset','chpw','ures','ud']),MC={};
 async function api(a,d={}){
+ const kk=a+(d.eid??'');
  const run=async()=>{const r=await fetch('/api/rpc',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(AT||'')},body:JSON.stringify({a,...d})});
   const j=await r.json().catch(()=>({e:'Không kết nối được máy chủ'}));
   if(r.status===401&&AT){AT=null;sessionStorage.removeItem('ttadm');go()}
-  if(!r.ok)throw new Error(j.e||'Có lỗi xảy ra');if(RD.has(a))MC[a]=JSON.stringify(j);return j};
+  if(!r.ok)throw new Error(j.e||'Có lỗi xảy ra');if(RD.has(a))MC[kk]=JSON.stringify(j);return j};
  if(MU.has(a))for(const k in MC)delete MC[k];
- const c=RD.has(a)&&MC[a];
+ const c=RD.has(a)&&MC[kk];
  if(c){run().then(j=>{if(JSON.stringify(j)!==c&&!document.querySelector('.mod')&&AT)adminApp()}).catch(()=>{});return JSON.parse(c)}
  return run()}
 function go(){stop();if(location.hash==='#admin')AT?adminApp():adminLogin();else{K=JSON.parse(localStorage.getItem('ttx')||'null');K?attempt():home()}}
@@ -149,24 +116,14 @@ window.onhashchange=go;
 
 let TH={};try{TH=JSON.parse(localStorage.getItem('ttth')||'{}')}catch(e){}
 const emb=s=>TH.logo?`<img src="${TH.logo}" width="${s}" height="${s}" style="object-fit:contain;border-radius:50%" alt="">`:emb0(s);
-const DT={org:'CÔNG AN XÃ THUẦN TRUNG',sys:'Hệ thống thi trắc nghiệm trực tuyến',s1:'Kỷ cương - Trách nhiệm',s2:'Hiệu quả - Vì Nhân dân phục vụ',foot:'Hệ thống phần mềm @ Công an xã Thuần Trung',n_dash:'Trang chủ',n_exams:'Quản lý kỳ thi',n_bank:'Ngân hàng câu hỏi',n_res:'Kết quả thi',n_users:'Thí sinh',n_theme:'Giao diện',n_acc:'Tài khoản',p_exam:'Tham gia thi',p_res:'Kết quả của tôi',p_prof:'Thông tin cá nhân'};
-const T=k=>(TH.tx&&TH.tx[k])||DT[k];
-const IMGK=['logo','hero','portalImg','examImg','menuImg','pageImg'];
 function applyTheme(t){TH=t||{};const s=document.documentElement.style,set=(k,v)=>v?s.setProperty(k,v):s.removeProperty(k);
  set('--navy',TH.menu);set('--bg',TH.bg);set('--blue',TH.blue);set('--ff',TH.ff);set('--z',TH.z);
- const o=(TH.ov==null?55:TH.ov)/100,dk=`linear-gradient(rgba(8,24,70,${o}),rgba(8,24,70,${o}))`,im=u=>u?`${dk},url("${u}") center/cover`:'';
- set('--herobg',im(TH.hero));set('--portalimg',im(TH.portalImg));set('--examimg',im(TH.examImg));set('--menuimg',im(TH.menuImg));
- const wash='linear-gradient(color-mix(in srgb,var(--bg) 90%,transparent),color-mix(in srgb,var(--bg) 90%,transparent))';
- set('--pageimg',TH.pageImg?`${wash},url("${TH.pageImg}") center/cover fixed`:'');
- document.body.classList.toggle('nz',TH.zoom===false);
- document.title=T('sys')+' - '+T('org');
- let fl=document.querySelector('link[rel=icon]');
- if(TH.logo){if(!fl){fl=document.createElement('link');fl.rel='icon';document.head.appendChild(fl)}fl.href=TH.logo}else if(fl)fl.remove();
- try{localStorage.setItem('ttth',JSON.stringify(TH))}catch(e){try{const r={...TH};IMGK.forEach(k=>delete r[k]);localStorage.setItem('ttth',JSON.stringify(r))}catch(e2){}}}
+ set('--herobg',TH.hero?`linear-gradient(rgba(8,24,70,.55),rgba(8,24,70,.55)),url("${TH.hero}") center/cover`:'');
+ document.body.classList.toggle('nz',TH.zoom===false);try{localStorage.setItem('ttth',JSON.stringify(TH))}catch(e){}}
 function toast(m,t){let c=$('#toasts');if(!c){c=document.createElement('div');c.id='toasts';document.body.appendChild(c)}const d=document.createElement('div');d.className='toast '+(t||'');d.textContent=m;c.appendChild(d);setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),320)},3200)}
 const pwf=(id,l,ac)=>`<div><label for="${id}">${l}</label><div class="pw"><input id="${id}" type="password" autocomplete="${ac||'off'}"><button type="button" class="eye" aria-label="Hiện mật khẩu">👁️</button></div></div>`;
 document.addEventListener('click',e=>{const b=e.target.closest('.eye');if(b){const i=b.previousElementSibling;i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁️':'🙈'}});
-const shrink=(f,m,ty)=>new Promise((ok,no)=>{const i=new Image,u=URL.createObjectURL(f);i.onload=()=>{const s=Math.min(1,m/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*s;c.height=i.height*s;const x=c.getContext('2d');if(ty==='image/jpeg'){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}x.drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL(ty,.8))};i.onerror=no;i.src=u});
+const shrink=(f,m,ty)=>new Promise((ok,no)=>{const i=new Image,u=URL.createObjectURL(f);i.onload=()=>{const s=Math.min(1,m/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL(ty,.8))};i.onerror=no;i.src=u});
 async function users(){
  const L=await api('ul');
  P(`<h2>Tài khoản thí sinh</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} tài khoản · Đặt lại mật khẩu sẽ đổi về 6 số cuối CCCD</span></div><div class="tw"><table><thead><tr><th>Họ và tên</th><th>CCCD</th><th>Đơn vị</th><th>SĐT</th><th>Thao tác</th></tr></thead><tbody>${L.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.cccd)}</td><td>${esc(x.unit)}</td><td>${esc(x.phone)}</td><td style="white-space:nowrap"><button class="btn s o" data-r="${esc(x.cccd)}">Đặt lại MK</button> <button class="ic" data-d="${esc(x.cccd)}" aria-label="Xóa">🗑️</button></td></tr>`).join('')}</tbody></table></div></div>`);
@@ -176,36 +133,18 @@ async function acc(){
  P(`<h2>Tài khoản quản trị</h2><form class="card" id="cf" style="max-width:460px;display:flex;flex-direction:column;gap:12px"><div><label for="nu">Tên đăng nhập mới (để trống nếu giữ nguyên)</label><input id="nu" autocomplete="username"></div>${pwf('op','Mật khẩu hiện tại','current-password')}${pwf('np','Mật khẩu mới (tối thiểu 6 ký tự)','new-password')}${pwf('np2','Nhập lại mật khẩu mới','new-password')}<div class="err" id="er"></div><button class="btn">Đổi mật khẩu</button></form>`);
  $('#cf').onsubmit=async e=>{e.preventDefault();$('#er').textContent='';try{if($('#np').value!==$('#np2').value)throw new Error('Mật khẩu nhập lại không khớp');const r=await api('chpw',{old:$('#op').value,p:$('#np').value,u:$('#nu').value.trim()});AT=r.token;sessionStorage.setItem('ttadm',AT);toast('Đã cập nhật tài khoản','ok');$('#cf').reset()}catch(x){$('#er').textContent=x.message}}}
 async function theme(){
- const t=JSON.parse(JSON.stringify(TH));t.tx=t.tx||{};
- const C=[['menu','Màu menu / khung','#0a2a6e'],['bg','Màu nền','#f3f6fc'],['blue','Màu nút / điểm nhấn','#1a5fe0']];
+ const t={...TH},F=[['menu','Màu menu','#0a2a6e'],['bg','Màu nền','#f3f6fc'],['blue','Màu nút / điểm nhấn','#1a5fe0']];
  const fonts=[['','Mặc định'],['Arial,sans-serif','Arial'],['Tahoma,sans-serif','Tahoma'],['Georgia,serif','Georgia'],['"Times New Roman",serif','Times New Roman'],['"Courier New",monospace','Courier New']];
- const IM=[['logo','Logo','Ảnh vuông, nên dùng PNG nền trong suốt',256,'image/png'],['hero','Nền trang đăng nhập','Khung bên trái trang đăng nhập / đăng ký',1280],['portal','Banner cổng thí sinh','Dải đầu trang sau khi thí sinh đăng nhập',1280],['exam','Thanh đầu phòng thi','Dải trên cùng khi thí sinh đang làm bài',1280],['menu','Menu quản trị','Thanh menu bên trái của quản trị viên',640],['page','Nền khu vực quản trị','Nền phía sau các bảng và thẻ ở trang quản trị',1280]];
- const KEY={logo:'logo',hero:'hero',portal:'portalImg',exam:'examImg',menu:'menuImg',page:'pageImg'};
- const TX=[['org','Tên đơn vị'],['sys','Tên hệ thống'],['s1','Khẩu hiệu - dòng 1'],['s2','Khẩu hiệu - dòng 2'],['foot','Chân trang'],['p_exam','Thí sinh: mục thi'],['p_res','Thí sinh: mục kết quả'],['p_prof','Thí sinh: mục thông tin cá nhân'],['n_dash','Menu: Trang chủ'],['n_exams','Menu: Quản lý kỳ thi'],['n_bank','Menu: Ngân hàng câu hỏi'],['n_res','Menu: Kết quả thi'],['n_users','Menu: Thí sinh'],['n_theme','Menu: Giao diện'],['n_acc','Menu: Tài khoản']];
- const th=k=>t[KEY[k]]?`style="background-image:url('${t[KEY[k]]}')"`:'';
- P(`<h2>Giao diện</h2>
- <div class="card" style="max-width:900px"><h3 class="ct">Hình ảnh</h3><p class="cs">Mỗi ảnh được tự động thu nhỏ trước khi lưu. Tổng dung lượng các ảnh nên dưới 3 MB.</p>
-  <div class="ig">${IM.map(m=>`<div class="im"><div class="th" data-t="${m[0]}" ${th(m[0])}>${t[KEY[m[0]]]?'':'Mặc định'}</div><div style="flex:1;min-width:0"><b>${m[1]}</b><small>${m[2]}</small><div class="act" style="justify-content:flex-start;margin-top:8px"><button type="button" class="btn s o" data-p="${m[0]}">Chọn ảnh</button><button type="button" class="btn s o" data-x="${m[0]}">Xóa</button><input type="file" hidden accept="image/*" data-i="${m[0]}"></div></div></div>`).join('')}</div>
-  <div style="margin-top:14px"><label>Độ phủ màu tối trên ảnh nền: <b id="ovv">${t.ov==null?55:t.ov}%</b> (giúp chữ dễ đọc)</label><input type="range" id="ov" min="0" max="90" step="5" value="${t.ov==null?55:t.ov}"></div></div>
- <div class="card" style="max-width:900px"><h3 class="ct">Tên và nội dung hiển thị</h3><p class="cs">Để trống để dùng nội dung mặc định.</p>
-  <div class="fg">${TX.map(x=>`<div><label>${x[1]}</label><input data-tx="${x[0]}" value="${esc(t.tx[x[0]]||'')}" placeholder="${esc(DT[x[0]])}" maxlength="120"></div>`).join('')}</div></div>
- <div class="card" style="max-width:900px"><h3 class="ct">Màu sắc và phông chữ</h3>
-  <div class="fg">${C.map(f=>`<div><label>${f[1]}</label><input type="color" data-c="${f[0]}" value="${t[f[0]]||f[2]}" style="height:40px;padding:3px"></div>`).join('')}<div><label>Font chữ</label><select id="ff">${fonts.map(f=>`<option value="${esc(f[0])}" ${f[0]===(t.ff||'')?'selected':''}>${f[1]}</option>`).join('')}</select></div><div><label>Kích thước giao diện: <b id="zv">${Math.round((t.z||1)*100)}%</b></label><input type="range" id="z" min="80" max="130" step="5" value="${Math.round((t.z||1)*100)}"></div><label class="w" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="zm" style="width:auto" ${t.zoom===false?'':'checked'}> Phóng to nhẹ khi di chuột vào mục</label></div></div>
- <div class="act" style="max-width:900px"><button class="btn o" id="rs">Khôi phục mặc định</button><button class="btn" id="sv">Lưu giao diện</button></div>`);
+ P(`<h2>Giao diện</h2><div class="card" style="max-width:680px"><div class="fg">${F.map(f=>`<div><label>${f[1]}</label><input type="color" data-c="${f[0]}" value="${t[f[0]]||f[2]}" style="height:40px;padding:3px"></div>`).join('')}<div><label>Font chữ</label><select id="ff">${fonts.map(f=>`<option value="${esc(f[0])}" ${f[0]===(t.ff||'')?'selected':''}>${f[1]}</option>`).join('')}</select></div><div><label>Kích thước giao diện: <b id="zv">${Math.round((t.z||1)*100)}%</b></label><input type="range" id="z" min="80" max="130" step="5" value="${Math.round((t.z||1)*100)}"></div><div><label>Logo (ảnh vuông)</label><input type="file" id="lg" accept="image/*"></div><div><label>Ảnh nền trang đăng nhập</label><input type="file" id="hr" accept="image/*"></div><label class="w" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="zm" style="width:auto" ${t.zoom===false?'':'checked'}> Phóng to nhẹ khi di chuột vào mục</label></div><div class="act"><button class="btn o" id="rs">Khôi phục mặc định</button><button class="btn" id="sv">Lưu giao diện</button></div></div>`);
  const ap=()=>applyTheme(t);
  document.querySelectorAll('[data-c]').forEach(i=>i.oninput=()=>{t[i.dataset.c]=i.value;ap()});
- document.querySelectorAll('[data-tx]').forEach(i=>i.oninput=()=>{const v=i.value.trim();if(v)t.tx[i.dataset.tx]=v;else delete t.tx[i.dataset.tx];ap()});
  $('#ff').onchange=e=>{t.ff=e.target.value;ap()};
  $('#z').oninput=e=>{t.z=e.target.value/100;$('#zv').textContent=e.target.value+'%';ap()};
- $('#ov').oninput=e=>{t.ov=+e.target.value;$('#ovv').textContent=e.target.value+'%';ap()};
  $('#zm').onchange=e=>{t.zoom=e.target.checked;ap()};
- const setTh=(k,v)=>{const el=document.querySelector(`[data-t="${k}"]`);if(!el)return;el.style.backgroundImage=v?`url('${v}')`:'';el.textContent=v?'':'Mặc định'};
- document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>document.querySelector(`[data-i="${b.dataset.p}"]`).click());
- document.querySelectorAll('[data-i]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0],m=IM.find(x=>x[0]===inp.dataset.i);if(!f)return;
-  try{t[KEY[m[0]]]=await shrink(f,m[3],m[4]||'image/jpeg');setTh(m[0],t[KEY[m[0]]]);ap();toast('Đã chọn ảnh, bấm Lưu giao diện để áp dụng')}catch(x){toast('Không đọc được ảnh','bad')}inp.value=''});
- document.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{delete t[KEY[b.dataset.x]];setTh(b.dataset.x,'');ap()});
- $('#sv').onclick=async()=>{try{if(JSON.stringify(t).length>3400000)throw new Error('Tổng dung lượng ảnh quá lớn, hãy bỏ bớt ảnh hoặc chọn ảnh nhỏ hơn');await api('themeset',{t});toast('Đã lưu giao diện','ok');adminApp()}catch(x){toast(x.message,'bad')}};
- $('#rs').onclick=async()=>{if(confirm('Khôi phục toàn bộ giao diện và tên các mục về mặc định?'))try{await api('themeset',{t:{}});applyTheme({});adminApp()}catch(x){toast(x.message,'bad')}}}
+ const img=(id,k,px,ty)=>$(id).onchange=async e=>{const f=e.target.files[0];if(f)try{t[k]=await shrink(f,px,ty);ap();toast('Đã chọn ảnh, bấm Lưu để áp dụng')}catch(x){toast('Không đọc được ảnh','bad')}};
+ img('#lg','logo',256,'image/png');img('#hr','hero',1280,'image/jpeg');
+ $('#sv').onclick=async()=>{try{await api('themeset',{t});toast('Đã lưu giao diện','ok')}catch(x){toast(x.message,'bad')}};
+ $('#rs').onclick=async()=>{if(confirm('Khôi phục giao diện mặc định?'))try{await api('themeset',{t:{}});applyTheme({});adminApp()}catch(x){toast(x.message,'bad')}}}
 function parseDocx(xml){
  const d=new DOMParser().parseFromString(xml,'application/xml'),on=e=>e&&!['0','false','none'].includes(e.getAttribute('w:val')||'');
  const fm=r=>{const p=r.getElementsByTagName('w:rPr')[0];if(!p)return false;const g=n=>p.getElementsByTagName(n)[0],c=g('w:color'),sh=g('w:shd');
@@ -230,22 +169,39 @@ function impWord(){
   try{if(!window.JSZip)await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=ok;s.onerror=()=>no(new Error('Không tải được thư viện đọc Word (cần Internet)'));document.head.appendChild(s)});
    const z=await JSZip.loadAsync(await f.arrayBuffer()),x=await z.file('word/document.xml').async('string'),{list,skip}=parseDocx(x);
    if(!list.length)throw new Error('Không nhận diện được câu hỏi nào có đáp án in đậm/tô màu');
-   modal(`Nhập từ Word: ${list.length} câu hợp lệ${skip?` (bỏ qua ${skip} câu không rõ đáp án)`:''}`,[{k:'s',l:'Môn học'},{k:'l',l:'Mức độ',t:'sel',o:['Dễ','Trung bình','Khó']},{k:'m',l:'Cách nhập',t:'sel',w:1,o:['Thêm vào ngân hàng hiện có','Thay thế toàn bộ ngân hàng'],v:['add','rep']}],{s:'Pháp luật',l:'Trung bình',m:'add'},async o=>{const r=await api('qi',{replace:o.m==='rep',list:list.map(q=>({...q,s:o.s||'Pháp luật',l:o.l}))});toast('Đã nhập '+r.n+' câu hỏi','ok')})
+   modal(`Nhập từ Word: ${list.length} câu hợp lệ${skip?` (bỏ qua ${skip} câu không rõ đáp án)`:''}`,[{k:'s',l:'Môn học'},{k:'l',l:'Mức độ',t:'sel',o:['Dễ','Trung bình','Khó']},{k:'m',l:'Cách nhập',t:'sel',w:1,o:['Thêm vào kỳ thi này','Thay thế toàn bộ câu hỏi của kỳ thi'],v:['add','rep']}],{s:'Pháp luật',l:'Trung bình',m:'add'},async o=>{const r=await api('qi',{eid:EQ,replace:o.m==='rep',list:list.map(q=>({...q,s:o.s||'Pháp luật',l:o.l}))});toast('Đã nhập '+r.n+' câu hỏi','ok')})
   }catch(e){toast(e.message,'bad')}};inp.click()}
 
 /* ---------- THÍ SINH ---------- */
 let U=JSON.parse(localStorage.getItem('ttu')||'null');
 const setU=u=>{U=u;u?localStorage.setItem('ttu',JSON.stringify(u)):localStorage.removeItem('ttu')};
-let PT='exam',EX=[],HS=[];
-const ICO={exam:'<path d="M9 4h6l1 2h3v15H5V6h3z"/><path d="M9 14l2 2 4-4"/>',res:'<path d="M4 20V11M10 20V4M16 20v-6M2 20h20"/>',prof:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',out:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',time:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>'};
-const ico=(k,s=18)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none">${ICO[k]}</svg>`;
-const ini=n=>{const w=String(n||'?').trim().split(/\s+/);return esc((w[w.length-1][0]||'?').toUpperCase())};
-async function ua(a,d={}){try{return await api(a,{...d,ut:U&&U.ut})}catch(e){if(/đăng nhập lại/.test(e.message)){setU(null);home()}throw e}}
-
 async function home(){
  if(U)return portal();
- $('#root').innerHTML=`<div class="split">${HERO()}<div class="side"><div class="box"><div class="tabs"><button id="t1">Đăng nhập</button><button id="t2">Đăng ký</button></div><form id="af"></form><div class="sub"><a href="#admin" style="color:var(--mut)">Đăng nhập quản trị</a></div></div>${FOOT()}</div></div>`;
+ $('#root').innerHTML=`<div class="split">${HERO()}<div class="side"><div class="box"><div class="tabs"><button id="t1">Đăng nhập</button><button id="t2">Đăng ký</button></div><form id="af"></form><div class="sub"><a href="#admin" style="color:var(--mut)">Đăng nhập quản trị</a></div></div>${FOOT}</div></div>`;
  authForm('in')}
+let UV='join';
+const UNAV=[['join','📝','Tham gia bài thi'],['res','🏆','Kết quả của tôi'],['me','👤','Thông tin cá nhân']];
+function portal(){
+ stop();
+ $('#root').innerHTML=`<div id="app"><aside id="sb"><div class="brand">${emb(38)}<span>CÔNG AN XÃ<br>THUẦN TRUNG</span></div><nav>${UNAV.map(x=>`<a class="${UV===x[0]?'on':''}" data-v="${x[0]}" tabindex="0">${x[1]} ${x[2]}</a>`).join('')}</nav><nav style="flex:none"><a id="out">🚪 Đăng xuất</a></nav></aside><main><div class="top"><button id="menu" aria-label="Menu">☰</button><span></span><b>${esc(U.name)}</b></div><div class="page" id="pg"></div>${FOOT}</main></div>`;
+ document.querySelectorAll('nav a[data-v]').forEach(a=>a.onclick=()=>{UV=a.dataset.v;portal()});
+ $('#out').onclick=()=>{setU(null);UV='join';home()};
+ $('#menu').onclick=()=>$('#sb').classList.toggle('open');
+ ({join:pJoin,res:pRes,me:pMe})[UV]().catch(e=>{if(/đăng nhập lại/.test(e.message)){setU(null);home()}else $('#pg').innerHTML=`<div class="card err">${esc(e.message)}</div>`})}
+async function pJoin(){
+ const L=await api('exams');
+ P(`<h2>Tham gia bài thi</h2>${L.length?L.map(x=>`<div class="card" style="margin-bottom:12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b style="font-size:16px">${esc(x.name)}</b><div style="color:var(--mut);margin-top:4px">${x.mode==='live'?'Thi đồng loạt'+(x.status==='waiting'?' · chờ giám thị bắt đầu':' · đang diễn ra'):'Thi tự do, làm bài bất cứ lúc nào'} · ${x.dur} phút</div></div><button class="btn" data-j="${x.id}">Vào thi</button></div>`).join(''):'<div class="card" style="text-align:center;color:var(--mut)">Hiện chưa có bài thi nào đang mở.</div>'}`);
+ document.querySelectorAll('[data-j]').forEach(b=>b.onclick=async()=>{b.disabled=true;
+  try{const k=await api('join',{eid:+b.dataset.j,ut:U.ut});localStorage.setItem('ttx',JSON.stringify(k));K=k;attempt()}
+  catch(e){if(/đăng nhập lại/.test(e.message)){setU(null);home()}else{toast(e.message,'bad');b.disabled=false}}})}
+async function pRes(){
+ const L=await api('myres',{ut:U.ut});
+ P(`<h2>Kết quả các bài thi</h2><div class="card"><p style="margin-bottom:10px;color:var(--mut)">Đạt từ ${70} điểm trở lên. Bài đang làm dở sẽ tự chấm khi hết giờ.</p>${tbl(['Kỳ thi','Số câu đúng','Điểm','Kết quả','Nộp lúc'],L.map(x=>`<tr><td>${esc(x.exam)}</td><td>${x.done?x.right+'/'+x.total:'—'}</td><td>${x.done?x.score:'—'}</td><td>${x.done?`<span class="tag ${x.ok?'tg':'tr'}">${x.ok?'Đạt':'Không đạt'}</span>`:`<span class="tag ty">${x.wait?'Chưa làm bài':'Đang làm'}</span>`}</td><td>${x.done?fmt(x.sub):''}</td></tr>`).join(''))}</div>`)}
+async function pMe(){
+ const u=await api('me',{ut:U.ut});
+ P(`<h2>Thông tin cá nhân</h2><form class="card" id="pf" style="max-width:520px;display:flex;flex-direction:column;gap:12px"><div><label>Số căn cước công dân</label><input value="${esc(u.cccd)}" disabled></div><div><label for="n">Họ và tên *</label><input id="n" maxlength="80" value="${esc(u.name)}"></div><div><label for="u">Đơn vị</label><input id="u" maxlength="80" value="${esc(u.unit)}"></div><div><label for="ph">Số điện thoại</label><input id="ph" maxlength="20" value="${esc(u.phone)}"></div><div class="err" id="er"></div><button class="btn">Lưu thông tin</button></form><h3 style="margin:24px 0 10px">Đổi mật khẩu</h3><form class="card" id="pf2" style="max-width:520px;display:flex;flex-direction:column;gap:12px">${pwf('op','Mật khẩu hiện tại','current-password')}${pwf('np','Mật khẩu mới (tối thiểu 6 ký tự)','new-password')}${pwf('np2','Nhập lại mật khẩu mới','new-password')}<div class="err" id="er2"></div><button class="btn">Đổi mật khẩu</button></form>`);
+ $('#pf').onsubmit=async e=>{e.preventDefault();$('#er').textContent='';try{const r=await api('meset',{ut:U.ut,name:$('#n').value,unit:$('#u').value,phone:$('#ph').value});setU({...U,name:r.name,unit:r.unit});toast('Đã lưu thông tin','ok');portal()}catch(x){$('#er').textContent=x.message}};
+ $('#pf2').onsubmit=async e=>{e.preventDefault();$('#er2').textContent='';try{if($('#np').value!==$('#np2').value)throw new Error('Mật khẩu nhập lại không khớp');await api('mepw',{ut:U.ut,old:$('#op').value,p:$('#np').value});toast('Đã đổi mật khẩu','ok');$('#pf2').reset()}catch(x){$('#er2').textContent=x.message}}}
 function authForm(m){
  const reg=m==='up',f=$('#af');
  $('#t1').className=reg?'':'on';$('#t2').className=reg?'on':'';
@@ -254,79 +210,28 @@ function authForm(m){
  f.onsubmit=async e=>{e.preventDefault();$('#er').textContent='';
   try{if(reg&&$('#pw').value!==$('#pw2').value)throw new Error('Mật khẩu nhập lại không khớp');
    const r=await api(reg?'reg':'ulogin',{cccd:$('#c').value.trim(),p:$('#pw').value,...(reg?{name:$('#n').value,unit:$('#u').value,phone:$('#ph').value}:{})});
-   PT='exam';setU(r);toast(reg?'Đăng ký thành công':'Đăng nhập thành công','ok');home()}catch(x){$('#er').textContent=x.message}}}
-
-/* ---------- CỔNG THÍ SINH ---------- */
-async function portal(){
- stop();
- const TB=[['exam','p_exam'],['res','p_res'],['prof','p_prof']];
- $('#root').innerHTML=`<div class="pt"><header class="ph"><div class="nm">${emb(42)}<div>${esc(T('org'))}<small>${esc(T('sys'))}</small></div></div><div class="me"><div class="av">${ini(U.name)}</div><div class="mn"><b>${esc(U.name)}</b><small>CCCD ${esc(U.cccd)}</small></div><button class="btn s o" id="lo" style="display:flex;gap:6px;align-items:center">${ico('out',15)}Đăng xuất</button></div></header>
- <section class="pb"><div class="pbi"><div><h1>Xin chào, ${esc(U.name)}</h1><p>${U.unit?esc(U.unit)+' - ':''}Chúc bạn làm bài thi thật tốt.</p></div><div class="kp" id="kp"></div></div></section>
- <div class="pm"><div class="tb2" role="tablist">${TB.map(x=>`<button role="tab" data-t="${x[0]}">${ico(x[0])}${esc(T(x[1]))}</button>`).join('')}</div><div id="pc"><div class="card emp">Đang tải...</div></div></div>
- ${FOOT()}<div class="foot" style="padding-top:0"><a href="#admin" style="color:var(--mut)">Đăng nhập quản trị</a></div></div>`;
- $('#lo').onclick=()=>{setU(null);home()};
- document.querySelectorAll('.tb2 button').forEach(b=>b.onclick=()=>{PT=b.dataset.t;show()});
- try{[EX,HS]=await Promise.all([ua('uexams'),ua('uhist')])}catch(e){if(U&&$('#pc'))$('#pc').innerHTML=`<div class="card err">${esc(e.message)}</div>`;return}
- kpi();show();
- pl=setInterval(async()=>{try{const r=await Promise.all([ua('uexams'),ua('uhist')]);
-  if(PT!=='prof'&&JSON.stringify(r)!==JSON.stringify([EX,HS])&&$('#pc')){[EX,HS]=r;kpi();show()}}catch(e){}},15000)}
-const kpi=()=>{const d=HS.filter(x=>x.done),p=d.filter(x=>x.ok).length,a=d.length?Math.round(d.reduce((s,x)=>s+x.score,0)/d.length*10)/10:'-';
- const k=$('#kp');if(k)k.innerHTML=`<div><b>${d.length}</b><span>Bài đã nộp</span></div><div><b>${p}</b><span>Bài đạt</span></div><div><b>${a}</b><span>Điểm trung bình</span></div>`};
-function show(){
- document.querySelectorAll('.tb2 button').forEach(b=>{const on=b.dataset.t===PT;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});
- ({exam:pExam,res:pRes,prof:pProf})[PT]()}
-async function joinEx(id,btn){
- if(btn)btn.disabled=true;
- try{const k=await ua('join',{eid:id});localStorage.setItem('ttx',JSON.stringify(k));K=k;attempt()}
- catch(e){toast(e.message,'bad');if(btn)btn.disabled=false}}
-function pExam(){
- const c=$('#pc');
- if(!EX.length){c.innerHTML=`<div class="card emp">${ico('exam',40)}<h3>Hiện chưa có kỳ thi nào đang mở</h3><p>Khi quản trị viên mở kỳ thi, kỳ thi sẽ xuất hiện tại đây.</p></div>`;return}
- c.innerHTML=`<div class="xg">${EX.map(x=>{const live=x.mode==='live',
-  st=live?(x.status==='waiting'?'Đang ở phòng chờ, chờ quản trị viên mở thi':'Kỳ thi đang diễn ra'):(x.t2?'Đóng lúc '+fmt(x.t2):'Mở thường xuyên'),
-  btn=x.my==='done'?`<button class="btn o" data-v="res">Xem kết quả (${x.score} điểm)</button>`:x.my==='doing'?`<button class="btn g" data-j="${x.id}">Tiếp tục làm bài</button>`:`<button class="btn" data-j="${x.id}" data-n="${live?0:1}">${live&&x.status==='waiting'?'Vào phòng chờ':'Vào thi'}</button>`;
-  return`<article class="xc ${live?'live':''}"><div class="xh"><span class="tag ${live?'ty':'tb'}">${live?'Thi đồng loạt':'Thi tự do'}</span>${x.my==='done'?`<span class="tag ${x.ok?'tg':'tr'}">${x.ok?'Đạt':'Không đạt'}</span>`:x.my==='doing'?'<span class="tag tb">Đang làm dở</span>':''}</div><h3>${esc(x.name)}</h3><div class="xm"><span>${ico('time',15)}${x.dur} phút</span><span>${ico('list',15)}${x.cnt} câu</span></div><div class="xs">${esc(st)}</div>${btn}</article>`}).join('')}</div>`;
- c.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>{if(b.dataset.n==='1'&&!confirm('Thời gian làm bài sẽ được tính ngay khi bạn vào thi. Bạn đã sẵn sàng chưa?'))return;joinEx(+b.dataset.j,b)});
- c.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{PT='res';show()})}
-function pRes(){
- const c=$('#pc'),d=HS.filter(x=>x.done),best=d.length?Math.max(...d.map(x=>x.score)):'-';
- if(!HS.length){c.innerHTML=`<div class="card emp">${ico('res',40)}<h3>Bạn chưa tham gia kỳ thi nào</h3><p>Kết quả các bài thi của bạn sẽ được lưu tại đây.</p><button class="btn" id="gx" style="margin-top:14px">Xem các kỳ thi đang mở</button></div>`;$('#gx').onclick=()=>{PT='exam';show()};return}
- c.innerHTML=`<div class="card"><div class="tools"><b style="flex:1;font-size:16px">Lịch sử các bài thi</b><span style="color:var(--mut)">Điểm đạt: từ 70 trở lên · Điểm cao nhất: ${best}</span></div>${tbl(['Kỳ thi','Nộp lúc','Điểm','Kết quả',''],HS.map(x=>`<tr><td><b>${esc(x.exam)}</b><br><small style="color:var(--mut)">${x.mode==='live'?'Thi đồng loạt':'Thi tự do'}</small></td><td>${x.sub?fmt(x.sub):'-'}</td><td>${x.done?`<div class="sc ${x.ok?'':'bad'}"><b>${x.score}</b><i><u style="width:${Math.min(100,x.score)}%"></u></i></div>`:'-'}</td><td><span class="tag ${x.done?(x.ok?'tg':'tr'):x.total?'tb':'ty'}">${x.done?(x.ok?'Đạt':'Không đạt'):x.total?`Đang làm ${x.got}/${x.total}`:'Chờ thi'}</span></td><td>${x.done?'':`<button class="btn s g" data-j="${x.eid}">Tiếp tục</button>`}</td></tr>`).join(''))}</div>`;
- c.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>joinEx(+b.dataset.j,b))}
-async function pProf(){
- const c=$('#pc');
- c.innerHTML=`<div class="pg2"><form class="card" id="pf"><div class="ph2"><div class="av big">${ini(U.name)}</div><div><h3>Thông tin cá nhân</h3><p>Quản trị viên sẽ thấy các thông tin này khi theo dõi kỳ thi.</p></div></div>
- <div class="fg"><div class="w"><label for="pc0">Số căn cước công dân (không thể thay đổi)</label><input id="pc0" value="${esc(U.cccd)}" disabled></div><div><label for="pn">Họ và tên *</label><input id="pn" maxlength="80" value="${esc(U.name)}"></div><div><label for="pu">Đơn vị</label><input id="pu" maxlength="80" value="${esc(U.unit||'')}"></div><div class="w"><label for="ph">Số điện thoại (không bắt buộc)</label><input id="ph" inputmode="tel" maxlength="20"></div></div>
- <div class="err" id="e1" style="margin-top:8px"></div><div class="act"><button class="btn">Lưu thông tin</button></div></form>
- <form class="card" id="pw"><div class="ph2"><div class="av big" style="background:var(--gold)">${ico('lock',22)}</div><div><h3>Đổi mật khẩu</h3><p>Dùng mật khẩu từ 6 ký tự trở lên.</p></div></div>
- <div style="display:flex;flex-direction:column;gap:12px">${pwf('po','Mật khẩu hiện tại','current-password')}${pwf('pn1','Mật khẩu mới','new-password')}${pwf('pn2','Nhập lại mật khẩu mới','new-password')}</div>
- <div class="err" id="e2" style="margin-top:8px"></div><div class="act"><button class="btn">Đổi mật khẩu</button></div></form></div>`;
- ua('uget').then(u=>{const e=$('#ph');if(e&&PT==='prof')e.value=u.phone||''}).catch(()=>{});
- $('#pf').onsubmit=async e=>{e.preventDefault();$('#e1').textContent='';
-  try{const r=await ua('uset',{name:$('#pn').value,unit:$('#pu').value,phone:$('#ph').value});setU({...U,...r});toast('Đã lưu thông tin cá nhân','ok');portal()}catch(x){$('#e1').textContent=x.message}};
- $('#pw').onsubmit=async e=>{e.preventDefault();$('#e2').textContent='';
-  try{if($('#pn1').value!==$('#pn2').value)throw new Error('Mật khẩu nhập lại không khớp');await ua('upw',{old:$('#po').value,p:$('#pn1').value});toast('Đã đổi mật khẩu','ok');$('#pw').reset()}catch(x){$('#e2').textContent=x.message}}}
+   setU(r);toast(reg?'Đăng ký thành công':'Đăng nhập thành công','ok');home()}catch(x){$('#er').textContent=x.message}}}
 function attempt(){
  stop();S={s:''};load();pl=setInterval(load,6000);
 }
 async function load(){
  try{const s=await api('state',{...K,light:S.s==='run'});
   if(s.s==='run'){const first=S.s!=='run';S.off=s.now-Date.now();S.dl=s.dl;if(first){S={s:'run',qs:s.qs,ans:s.ans,i:0,off:S.off,dl:s.dl,name:s.exam};exam();clearInterval(tm);tm=setInterval(tick,1000)}}
-  else if(s.s==='wait'){S.s='wait';$('#root').innerHTML=`<div class="center card"><div>${emb(70)}</div><h2>${esc(s.exam)}</h2><p>Bạn đã vào phòng chờ. Kỳ thi sẽ tự bắt đầu khi quản trị viên mở thi.</p><p class="sub" style="margin-top:10px">Đã có ${s.n} thí sinh trong phòng</p></div>${FOOT()}`}
-  else{stop();const d=s.s==='done';$('#root').innerHTML=`<div class="center card"><h2>${esc(s.exam||'')}</h2>${d?`<p>Bài thi đã được nộp. Điểm của bạn</p><div class="big">${s.score}</div><span class="tag ${s.ok?'tg':'tr'}">${s.ok?'Đạt':'Không đạt'}</span>`:'<p>Kỳ thi đã kết thúc.</p>'}<div style="margin-top:20px"><button class="btn" id="hm">Về trang cá nhân</button></div></div>${FOOT()}`;
-   $('#hm').onclick=()=>{localStorage.removeItem('ttx');K=null;PT='res';home()}}
+  else if(s.s==='wait'){S.s='wait';$('#root').innerHTML=`<div class="center card"><div>${emb(70)}</div><h2>${esc(s.exam)}</h2><p>Bạn đã vào phòng chờ. Kỳ thi sẽ tự bắt đầu khi quản trị viên mở thi.</p><p class="sub" style="margin-top:10px">Đã có ${s.n} thí sinh trong phòng</p></div>${FOOT}`}
+  else{stop();const d=s.s==='done';$('#root').innerHTML=`<div class="center card"><h2>${esc(s.exam||'')}</h2>${d?`<p>Bài thi đã được nộp. Điểm của bạn</p><div class="big">${s.score}</div><span class="tag ${s.ok?'tg':'tr'}">${s.ok?'Đạt':'Không đạt'}</span>`:'<p>Kỳ thi đã kết thúc.</p>'}<div style="margin-top:20px"><button class="btn" id="hm">Về trang chủ</button></div></div>${FOOT}`;
+   $('#hm').onclick=()=>{UV=d?'res':'join';localStorage.removeItem('ttx');K=null;home()}}
  }catch(e){if(/không hợp lệ|Không tìm thấy/.test(e.message)){stop();localStorage.removeItem('ttx');home()}}
 }
 function tick(){const s=Math.max(0,Math.round((S.dl-(Date.now()+S.off))/1000)),el=$('#tm');
  if(el)el.textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');if(s<=0){clearInterval(tm);load()}}
 function exam(){
  const n=S.qs.length,q=S.qs[S.i],da=Object.keys(S.ans).length;
- $('#root').innerHTML=`<div class="eh">${emb(36)}<div><b>${esc(T('org'))}</b><div>${esc(S.name)}</div></div></div>
+ $('#root').innerHTML=`<div style="background:var(--navy);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center">${emb(34)}<div><b>CÔNG AN XÃ THUẦN TRUNG</b><div style="font-size:12px;opacity:.85">${esc(S.name)}</div></div></div>
  <div class="page"><div class="ex"><div class="card"><div class="row" style="margin:0"><b style="white-space:nowrap">Câu hỏi ${S.i+1} / ${n}</b><div class="bar2"><i style="width:${(S.i+1)/n*100}%"></i></div></div>
  <div class="qt">${esc(q.q)}</div>${q.o.map((o,i)=>`<button class="opt ${S.ans[S.i]===i?'on':''}" data-o="${i}"><span class="dot"></span><b>${'ABCD'[i]}.</b> ${esc(o)}</button>`).join('')}
  <div class="row"><button class="btn o" id="pv" ${S.i?'':'disabled'}>‹ Câu trước</button><button class="btn" id="nx" ${S.i<n-1?'':'disabled'}>Câu tiếp ›</button></div></div>
  <div><div class="card tmr"><span class="sub" style="text-align:left;display:block;font-size:12px">Thời gian còn lại</span><b id="tm">--:--:--</b><div style="margin-top:8px;font-size:12px;color:var(--mut)">Đã làm: ${da} · Chưa làm: ${n-da}</div></div>
- <div class="card"><b>Danh sách câu hỏi</b><div class="grid">${S.qs.map((_,i)=>`<button data-g="${i}" class="${i===S.i?'c':S.ans[i]!=null?'d':''}">${i+1}</button>`).join('')}</div></div><button class="btn" style="width:100%" id="sub">Nộp bài</button></div></div></div>${FOOT()}`;
+ <div class="card"><b>Danh sách câu hỏi</b><div class="grid">${S.qs.map((_,i)=>`<button data-g="${i}" class="${i===S.i?'c':S.ans[i]!=null?'d':''}">${i+1}</button>`).join('')}</div></div><button class="btn" style="width:100%" id="sub">Nộp bài</button></div></div></div>${FOOT}`;
  document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const v=+b.dataset.o;S.ans[S.i]=v;api('answer',{...K,i:S.i,v}).catch(()=>{});exam();tick()});
  document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{S.i=+b.dataset.g;exam();tick()});
  $('#pv').onclick=()=>{S.i--;exam();tick()};$('#nx').onclick=()=>{S.i++;exam();tick()};
@@ -337,16 +242,16 @@ function exam(){
 async function adminLogin(){
  let st={set:true};try{st=await api('astat')}catch(e){}
  const first=!st.set;
- $('#root').innerHTML=`<div class="split">${HERO()}<div class="side"><form class="box" id="lf"><h2>${first?'Thiết lập tài khoản quản trị':'Đăng nhập hệ thống'}</h2><div class="sub">${first?'Lần đầu sử dụng: hãy tạo tên đăng nhập và mật khẩu':'Dành cho quản trị viên'}</div><div><label for="u">Tên đăng nhập</label><input id="u" autocomplete="username"></div>${pwf('p','Mật khẩu',first?'new-password':'current-password')}${first?pwf('p2','Nhập lại mật khẩu','new-password'):''}<div class="err" id="er"></div><button class="btn">${first?'Tạo tài khoản':'Đăng nhập'}</button><div class="sub"><a href="#" style="color:var(--mut)">Về trang thi</a></div></form>${FOOT()}</div></div>`;
+ $('#root').innerHTML=`<div class="split">${HERO()}<div class="side"><form class="box" id="lf"><h2>${first?'Thiết lập tài khoản quản trị':'Đăng nhập hệ thống'}</h2><div class="sub">${first?'Lần đầu sử dụng: hãy tạo tên đăng nhập và mật khẩu':'Dành cho quản trị viên'}</div><div><label for="u">Tên đăng nhập</label><input id="u" autocomplete="username"></div>${pwf('p','Mật khẩu',first?'new-password':'current-password')}${first?pwf('p2','Nhập lại mật khẩu','new-password'):''}<div class="err" id="er"></div><button class="btn">${first?'Tạo tài khoản':'Đăng nhập'}</button><div class="sub"><a href="#" style="color:var(--mut)">Về trang thi</a></div></form>${FOOT}</div></div>`;
  $('#lf').onsubmit=async e=>{e.preventDefault();try{if(first&&$('#p').value!==$('#p2').value)throw new Error('Mật khẩu nhập lại không khớp');const r=await api(first?'setup':'login',{u:$('#u').value.trim(),p:$('#p').value});AT=r.token;sessionStorage.setItem('ttadm',AT);V='dash';adminApp()}catch(x){$('#er').textContent=x.message}}}
-const NAV=[['dash','🏠','Trang chủ'],['exams','📋','Quản lý kỳ thi'],['bank','📚','Ngân hàng câu hỏi'],['res','✅','Kết quả thi'],['users','👥','Thí sinh'],['theme','🎨','Giao diện'],['acc','🔐','Tài khoản']];
+const NAV=[['dash','🏠','Trang chủ'],['exams','📋','Quản lý kỳ thi'],['res','✅','Kết quả thi'],['users','👥','Thí sinh'],['theme','🎨','Giao diện'],['acc','🔐','Tài khoản']];
 function adminApp(){
  stop();
- $('#root').innerHTML=`<div id="app"><aside id="sb"><div class="brand">${emb(38)}<span>${esc(T('org'))}</span></div><nav>${NAV.map(x=>`<a class="${V===x[0]||(V==='mon'&&x[0]==='exams')?'on':''}" data-v="${x[0]}" tabindex="0">${x[1]} ${esc(T('n_'+x[0]))}</a>`).join('')}</nav><nav style="flex:none"><a id="out">🚪 Đăng xuất</a></nav></aside><main><div class="top"><button id="menu" aria-label="Menu">☰</button><span></span><b>Quản trị viên</b></div><div class="page" id="pg"></div>${FOOT()}</main></div>`;
+ $('#root').innerHTML=`<div id="app"><aside id="sb"><div class="brand">${emb(38)}<span>CÔNG AN XÃ<br>THUẦN TRUNG</span></div><nav>${NAV.map(x=>`<a class="${V===x[0]||(V==='mon'&&x[0]==='exams')?'on':''}" data-v="${x[0]}" tabindex="0">${x[1]} ${x[2]}</a>`).join('')}</nav><nav style="flex:none"><a id="out">🚪 Đăng xuất</a></nav></aside><main><div class="top"><button id="menu" aria-label="Menu">☰</button><span></span><b>Quản trị viên</b></div><div class="page" id="pg"></div>${FOOT}</main></div>`;
  document.querySelectorAll('nav a[data-v]').forEach(a=>a.onclick=()=>{V=a.dataset.v;adminApp()});
  $('#out').onclick=()=>{AT=null;for(const k in MC)delete MC[k];sessionStorage.removeItem('ttadm');adminLogin()};
  $('#menu').onclick=()=>$('#sb').classList.toggle('open');
- ({dash,exams,bank,res,mon,users,theme,acc})[V]().catch(e=>$('#pg').innerHTML=`<div class="card err">${esc(e.message)}</div>`);
+ ({dash,exams,eq,res,mon,users,theme,acc})[V]().catch(e=>$('#pg').innerHTML=`<div class="card err">${esc(e.message)}</div>`);
 }
 const P=h=>{const p=$('#pg');if(p)p.innerHTML=h};
 const tbl=(h,r)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${r||`<tr><td colspan="${h.length}" style="text-align:center;color:var(--mut)">Chưa có dữ liệu.</td></tr>`}</tbody></table></div>`;
@@ -361,14 +266,15 @@ const canStart=e=>e.mode==='live'?e.status==='waiting':e.status!=='open';
 const canEnd=e=>e.mode==='live'?(e.status==='running'&&e.en>Date.now()):e.status==='open';
 async function exams(){
  const L=await api('el');
- P(`<h2>Quản lý kỳ thi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} kỳ thi</span><button class="btn o" id="iw">📄 Thêm câu hỏi từ Word</button><button class="btn" id="add">+ Tạo kỳ thi mới</button></div>${tbl(['Tên kỳ thi','Chế độ','Làm bài','Trạng thái','Thí sinh','Thao tác'],L.map(e=>{const s=lab(e);return`<tr><td>${esc(e.name)}</td><td>${e.mode==='live'?'Đồng loạt':'Tự do'}</td><td>${e.dur} phút / ${e.cnt} câu</td><td><span class="tag ${s[1]}">${s[0]}</span></td><td>${e.n}</td><td style="white-space:nowrap">${canStart(e)?`<button class="btn s g" data-s="${e.id}">${e.mode==='live'?'Bắt đầu thi':'Mở'}</button> `:''}${canEnd(e)?`<button class="btn s r" data-x="${e.id}">${e.mode==='live'?'Kết thúc':'Đóng'}</button> `:''}<button class="btn s o" data-m="${e.id}">Theo dõi</button><button class="ic" data-d="${e.id}" aria-label="Xóa">🗑️</button></td></tr>`}).join(''))}</div>`);
- $('#add').onclick=()=>modal('Tạo kỳ thi mới',[{k:'name',l:'Tên kỳ thi *',w:1},{k:'mode',l:'Chế độ thi',t:'sel',o:['Thi tự do (làm bất cứ lúc nào)','Thi đồng loạt (admin bắt đầu / kết thúc)'],v:['free','live'],w:1},{k:'dur',l:'Thời gian làm bài (phút)',t:'number'},{k:'cnt',l:'Số câu hỏi',t:'number'},{k:'t1',l:'Mở từ (tùy chọn, thi tự do)',t:'datetime-local'},{k:'t2',l:'Đóng lúc (tùy chọn, thi tự do)',t:'datetime-local'}],{dur:30,cnt:10},o=>api('es',{...o,t1:o.t1?new Date(o.t1).getTime():null,t2:o.t2?new Date(o.t2).getTime():null}));
- $('#iw').onclick=impWord;
+ P(`<h2>Quản lý kỳ thi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} kỳ thi</span><button class="btn" id="add">+ Tạo kỳ thi mới</button></div>${tbl(['Tên kỳ thi','Chế độ','Làm bài','Trạng thái','Thí sinh','Thao tác'],L.map(e=>{const s=lab(e);return`<tr><td>${esc(e.name)}</td><td>${e.mode==='live'?'Đồng loạt':'Tự do'}</td><td>${e.dur} phút · ${selTxt(e)}</td><td><span class="tag ${s[1]}">${s[0]}</span></td><td>${e.n}</td><td style="white-space:nowrap">${canStart(e)?`<button class="btn s g" data-s="${e.id}">${e.mode==='live'?'Bắt đầu thi':'Mở'}</button> `:''}${canEnd(e)?`<button class="btn s r" data-x="${e.id}">${e.mode==='live'?'Kết thúc':'Đóng'}</button> `:''}<button class="btn s o" data-q="${e.id}">Câu hỏi (${e.qn})</button> <button class="btn s o" data-ed="${e.id}">Sửa</button> <button class="btn s o" data-m="${e.id}">Theo dõi</button><button class="ic" data-d="${e.id}" aria-label="Xóa">🗑️</button></td></tr>`}).join(''))}</div>`);
+ $('#add').onclick=()=>exForm(null);
  const act=(sel,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=async()=>{try{await fn(b)}catch(e){toast(e.message)}adminApp()});
  act('[data-s]',b=>api('start',{id:+b.dataset.s}));
  act('[data-x]',b=>confirm('Kết thúc kỳ thi? Các bài đang làm sẽ được nộp và chấm ngay.')?api('end',{id:+b.dataset.x}):0);
  act('[data-d]',b=>confirm('Xóa kỳ thi và toàn bộ bài làm của kỳ thi này?')?api('ed',{id:+b.dataset.d}):0);
  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{MON=+b.dataset.m;V='mon';adminApp()});
+ document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{EQ=+b.dataset.q;V='eq';adminApp()});
+ document.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>exForm(L.find(x=>x.id==b.dataset.ed)));
 }
 async function mon(){
  const draw=async()=>{try{const {e,at}=await api('mon',{id:MON}),s=lab(e),dn=at.filter(x=>x.done).length;
@@ -382,21 +288,51 @@ async function mon(){
  }catch(e){P(`<div class="card err">${esc(e.message)}</div>`)}};
  await draw();pl=setInterval(draw,5000);
 }
-async function bank(){
- const L=[...await api('ql')].reverse();
- P(`<h2>Ngân hàng câu hỏi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: <b>${L.length}</b> câu hỏi</span><input id="qs" placeholder="Tìm câu hỏi..." style="max-width:220px"><button class="btn o" id="iw">📄 Nhập từ Word</button><button class="btn o" id="imp">Nhập hàng loạt</button><button class="btn" id="add">+ Thêm câu hỏi</button><button class="btn r" id="da">Xóa tất cả</button></div><div id="ql"></div></div>`);
- const draw=()=>{const k=$('#qs').value.trim().toLowerCase(),R=L.map((x,i)=>({x,i})).filter(({x})=>!k||x.q.toLowerCase().includes(k)||x.o.some(o=>o.toLowerCase().includes(k)));
-  $('#ql').innerHTML=R.length?R.map(({x,i})=>`<div class="qi"><div style="flex:1"><b>Câu ${i+1}:</b> ${esc(x.q)}<div class="qo">${x.o.map((o,j)=>`<span class="${j===x.a?'ok':''}">${'ABCD'[j]}. ${esc(o)}</span>`).join('')}</div><small style="color:var(--mut)">${esc(x.subj||'')} · ${esc(x.lvl||'')}</small></div><div class="qa"><button class="btn s o" data-e="${x.id}">✏️ Sửa</button><button class="btn s r" data-d="${x.id}">🗑️ Xóa</button></div></div>`).join(''):'<p style="text-align:center;color:var(--mut)">Chưa có câu hỏi nào.</p>'};
- draw();$('#qs').oninput=draw;
+const j2=s=>{try{return JSON.parse(s)||[]}catch(e){return[]}};
+const selTxt=e=>{const m=e.sm||'random';return(m==='range'?`Câu ${e.ra||1}–${e.rb||e.qn}`:m==='manual'?`${j2(e.sids).length} câu chọn tay`:`${Math.min(e.cnt,e.qn)} câu ngẫu nhiên`)+` (kho ${e.qn})`};
+function exForm(e){
+ const dl=v=>v?new Date(v-new Date(v).getTimezoneOffset()*6e4).toISOString().slice(0,16):'';
+ const F=[{k:'name',l:'Tên kỳ thi *',w:1}];
+ if(!e)F.push({k:'mode',l:'Chế độ thi',t:'sel',o:['Thi tự do (làm bất cứ lúc nào)','Thi đồng loạt (admin bắt đầu / kết thúc)'],v:['free','live'],w:1});
+ F.push({k:'dur',l:'Thời gian làm bài (phút)',t:'number'},{k:'cnt',l:'Số câu hỏi (khi chọn ngẫu nhiên)',t:'number'},{k:'t1',l:'Mở từ (tùy chọn, thi tự do)',t:'datetime-local'},{k:'t2',l:'Đóng lúc (tùy chọn, thi tự do)',t:'datetime-local'});
+ modal(e?'Sửa kỳ thi':'Tạo kỳ thi mới',F,e?{name:e.name,dur:e.dur,cnt:e.cnt,t1:dl(e.t1),t2:dl(e.t2)}:{dur:30,cnt:10},async o=>{await api('es',{...o,id:e?e.id:0,t1:o.t1?new Date(o.t1).getTime():null,t2:o.t2?new Date(o.t2).getTime():null});toast(e?'Đã lưu kỳ thi':'Đã tạo kỳ thi, bấm "Câu hỏi" để thêm câu hỏi','ok')})}
+let EQ=0;
+async function eq(){
+ const E=(await api('el')).find(x=>x.id===EQ);
+ if(!E){V='exams';return adminApp()}
+ const L=await api('ql',{eid:EQ}),sel=new Set(j2(E.sids)),R=(v,t)=>`<label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--tx);margin:0"><input type="radio" name="sm" value="${v}" style="width:auto">${t}</label>`;
+ P(`<div class="tools"><button class="btn s o" id="bk">‹ Quay lại</button><h2 style="margin:0;flex:1">Câu hỏi: ${esc(E.name)}</h2></div><div class="card" style="margin-bottom:14px"><h3 style="margin:0 0 12px">Cách chọn câu hỏi cho đề thi</h3><div style="display:flex;flex-direction:column;gap:10px">${R('random','Ngẫu nhiên <input id="cn" type="number" min="1" style="width:90px" value="'+E.cnt+'"> câu cho mỗi thí sinh')}${R('range','Theo khoảng: từ câu <input id="ra" type="number" min="1" style="width:90px"> đến câu <input id="rb" type="number" min="1" style="width:90px">')}${R('manual','Chọn thủ công: tích vào ô vuông ở từng câu bên dưới')}</div><div class="tools" style="margin:12px 0 0"><span id="pool" style="flex:1;color:var(--mut)"></span><button class="btn" id="ss">Lưu cách chọn</button></div></div><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: <b>${L.length}</b> câu hỏi</span><input id="qs" placeholder="Tìm câu hỏi..." style="max-width:200px"><button class="btn s o" id="sa">Chọn tất cả</button><button class="btn s o" id="sn">Bỏ chọn</button><button class="btn o" id="cp">Sao chép từ...</button><button class="btn o" id="iw">📄 Nhập từ Word</button><button class="btn o" id="imp">Nhập hàng loạt</button><button class="btn" id="add">+ Thêm câu hỏi</button><button class="btn r" id="da">Xóa tất cả</button></div><div id="ql"></div></div>`);
+ const gsm=()=>document.querySelector('input[name=sm]:checked').value,setSm=v=>{document.querySelector(`input[name=sm][value=${v}]`).checked=true};
+ setSm(E.sm||'random');$('#ra').value=E.ra||1;$('#rb').value=E.rb||L.length||1;
+ const inR=i=>{const m=gsm();return m==='range'?i+1>=(+$('#ra').value||1)&&i+1<=(+$('#rb').value||L.length):m==='manual'?sel.has(L[i].id):true};
+ const upd=()=>{const m=gsm(),n=L.filter((_,i)=>inR(i)).length;$('#pool').textContent=m==='random'?`Mỗi thí sinh nhận ${Math.min(+$('#cn').value||0,L.length)} / ${L.length} câu, bốc ngẫu nhiên`:`Đề gồm ${n} câu, xáo trộn thứ tự cho từng thí sinh`};
+ const draw=()=>{const k=$('#qs').value.trim().toLowerCase(),m=gsm(),V2=L.map((x,i)=>({x,i})).filter(({x})=>!k||x.q.toLowerCase().includes(k)||x.o.some(o=>o.toLowerCase().includes(k)));
+  $('#ql').innerHTML=V2.length?V2.map(({x,i})=>`<div class="qi${m!=='random'&&inR(i)?' in':''}"><input type="checkbox" class="pk" data-i="${x.id}" ${sel.has(x.id)?'checked':''} style="width:auto;margin-top:4px" aria-label="Chọn câu ${i+1}"><div style="flex:1"><b>Câu ${i+1}:</b> ${esc(x.q)}<div class="qo">${x.o.map((o,j)=>`<span class="${j===x.a?'ok':''}">${'ABCD'[j]}. ${esc(o)}</span>`).join('')}</div><small style="color:var(--mut)">${esc(x.subj||'')} · ${esc(x.lvl||'')}</small></div><div class="qa"><button class="btn s o" data-e="${x.id}">✏️ Sửa</button><button class="btn s r" data-d="${x.id}">🗑️ Xóa</button></div></div>`).join(''):'<p style="text-align:center;color:var(--mut)">Kỳ thi này chưa có câu hỏi. Hãy thêm, nhập từ Word hoặc sao chép từ nơi khác.</p>'};
+ draw();upd();
+ document.querySelectorAll('input[name=sm],#cn,#ra,#rb').forEach(i=>i.oninput=()=>{if(i.id==='ra'||i.id==='rb')setSm('range');if(i.id==='cn')setSm('random');draw();upd()});
+ $('#qs').oninput=draw;
+ $('#ql').onchange=e=>{const c=e.target;if(!c.classList.contains('pk'))return;c.checked?sel.add(+c.dataset.i):sel.delete(+c.dataset.i);setSm('manual');draw();upd()};
  $('#ql').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.e)qEdit(L.find(k=>k.id==b.dataset.e));
   if(b.dataset.d&&confirm('Xóa câu hỏi này?'))try{await api('qd',{id:+b.dataset.d});toast('Đã xóa câu hỏi');adminApp()}catch(x){toast(x.message,'bad')}};
+ $('#bk').onclick=()=>{V='exams';adminApp()};
+ $('#sa').onclick=()=>{L.forEach(x=>sel.add(x.id));setSm('manual');draw();upd()};
+ $('#sn').onclick=()=>{sel.clear();setSm('manual');draw();upd()};
+ $('#ss').onclick=async()=>{try{const m=gsm(),ra=+$('#ra').value||1,rb=+$('#rb').value||L.length;
+  if(m==='range'&&ra>rb)throw new Error('Số câu bắt đầu phải nhỏ hơn hoặc bằng số câu kết thúc');
+  if(m==='manual'&&!sel.size)throw new Error('Chưa tích chọn câu hỏi nào');
+  if(m!=='random'&&!L.length)throw new Error('Kỳ thi chưa có câu hỏi');
+  await api('esel',{id:EQ,sm:m,cnt:+$('#cn').value||1,ra,rb,sids:[...sel]});toast('Đã lưu cách chọn câu hỏi','ok')}catch(x){toast(x.message,'bad')}};
  $('#add').onclick=()=>qEdit(null);$('#iw').onclick=impWord;
- $('#da').onclick=async()=>{if(L.length&&confirm('CẢNH BÁO: xóa TOÀN BỘ câu hỏi trong ngân hàng?'))try{await api('qda');toast('Đã xóa toàn bộ câu hỏi');adminApp()}catch(x){toast(x.message,'bad')}};
+ $('#da').onclick=async()=>{if(L.length&&confirm('CẢNH BÁO: xóa TOÀN BỘ câu hỏi của kỳ thi này?'))try{await api('qda',{eid:EQ});toast('Đã xóa toàn bộ câu hỏi');adminApp()}catch(x){toast(x.message,'bad')}};
+ $('#cp').onclick=async()=>{const ex=(await api('el')).filter(x=>x.id!==EQ&&x.qn>0),old=(await api('qold')).n,o=[],v=[];
+  if(old){o.push(`Ngân hàng cũ (${old} câu)`);v.push('old')}ex.forEach(x=>{o.push(`${x.name} (${x.qn} câu)`);v.push(x.id)});
+  if(!o.length)return toast('Chưa có nguồn câu hỏi nào để sao chép','bad');
+  modal('Sao chép câu hỏi vào kỳ thi này',[{k:'f',l:'Sao chép từ',t:'sel',o,v,w:1}],{},async r=>{const n=await api('qcp',{eid:EQ,from:r.f});toast('Đã sao chép '+n.n+' câu hỏi','ok')})};
  $('#imp').onclick=()=>modal('Nhập hàng loạt',[{k:'t',l:'Mỗi dòng 1 câu: Câu hỏi | A | B | C | D | Đáp án đúng (A-D) | Môn | Mức độ',t:'ta',w:1}],{},async o=>{
   const list=o.t.split('\n').map(l=>l.split('|').map(s=>s.trim())).filter(c=>c.length>=6&&c[0]).map(c=>({q:c[0],o:c.slice(1,5),a:'ABCD'.indexOf((c[5]||'').toUpperCase()),s:c[6],l:c[7]}));
   if(!list.length)throw new Error('Không đọc được dòng nào. Cần: Câu hỏi | A | B | C | D | Đáp án');
-  const r=await api('qi',{list});toast('Đã nhập '+r.n+'/'+list.length+' câu hỏi','ok')})}
+  const r=await api('qi',{eid:EQ,list});toast('Đã nhập '+r.n+'/'+list.length+' câu hỏi','ok')})}
 function qEdit(x){
  const m=document.createElement('div');m.className='mod';
  m.innerHTML=`<div role="dialog"><h3>${x?'Chỉnh sửa câu hỏi':'Thêm câu hỏi'}</h3><form class="fg"><div class="w"><label>Nội dung câu hỏi *</label><textarea name="q" rows="3"></textarea></div><div class="w"><label>Các phương án và chọn đáp án đúng (*)</label>${[0,1,2,3].map(i=>`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><input type="radio" name="c" value="${i}" style="width:auto" ${i===(x?x.a:0)?'checked':''} aria-label="Đáp án đúng ${'ABCD'[i]}"><input name="o${i}" placeholder="Đáp án ${'ABCD'[i]}${i<2?' *':''}"></div>`).join('')}</div><div><label>Môn học</label><input name="s"></div><div><label>Mức độ</label><select name="l">${['Dễ','Trung bình','Khó'].map(v=>`<option>${v}</option>`).join('')}</select></div><div class="act w"><span class="err" id="me" style="margin-right:auto"></span><button type="button" class="btn o" id="mc">Hủy</button><button class="btn">Lưu câu hỏi</button></div></form></div>`;
@@ -407,7 +343,7 @@ function qEdit(x){
   if(!q)throw new Error('Vui lòng nhập nội dung câu hỏi');if(!o[c])throw new Error('Đáp án đúng đang để trống');
   let a=0;const opts=[];o.forEach((v,i)=>{if(v){if(i===c)a=opts.length;opts.push(v)}});
   if(opts.length<2)throw new Error('Cần ít nhất 2 phương án');
-  await api('qs',{id:x?x.id:0,q,o:opts,a,subj:f.s.value.trim()||'Pháp luật',lvl:f.l.value});toast(x?'Đã cập nhật câu hỏi':'Đã thêm câu hỏi','ok');m.remove();adminApp()}catch(er){m.querySelector('#me').textContent=er.message}}}
+  await api('qs',{eid:EQ,id:x?x.id:0,q,o:opts,a,subj:f.s.value.trim()||'Pháp luật',lvl:f.l.value});toast(x?'Đã cập nhật câu hỏi':'Đã thêm câu hỏi','ok');m.remove();adminApp()}catch(er){m.querySelector('#me').textContent=er.message}}}
 async function res(){
  const L=await api('res');
  P(`<h2>Kết quả thi</h2><div class="card"><div class="tools"><span style="flex:1;color:var(--mut)">Tổng: ${L.length} kết quả</span><button class="btn o" id="csv">Xuất CSV</button></div>${tbl(['STT','Họ và tên','Đơn vị','Kỳ thi','Điểm','Nộp lúc','Kết quả'],L.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td>${esc(x.exam)}</td><td>${x.score}</td><td>${fmt(x.sub)}</td><td><span class="tag ${x.ok?'tg':'tr'}">${x.ok?'Đạt':'Không đạt'}</span></td></tr>`).join(''))}</div>`);

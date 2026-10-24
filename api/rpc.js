@@ -18,7 +18,9 @@ const init = () => ready || (ready = db.batch([
   'CREATE TABLE IF NOT EXISTS cfg(k TEXT PRIMARY KEY,v TEXT)',
   'CREATE TABLE IF NOT EXISTS users(cccd TEXT PRIMARY KEY,name TEXT,unit TEXT,phone TEXT,pw TEXT,created INTEGER)'
 ]).then(async () => {
-  for (const x of ['ALTER TABLE attempts ADD COLUMN cccd TEXT', 'DROP INDEX IF EXISTS ux_att', 'CREATE UNIQUE INDEX IF NOT EXISTS ux_att2 ON attempts(eid,cccd)']) await db.execute(x).catch(() => {});
+  for (const x of ['ALTER TABLE attempts ADD COLUMN cccd TEXT', 'DROP INDEX IF EXISTS ux_att', 'CREATE UNIQUE INDEX IF NOT EXISTS ux_att2 ON attempts(eid,cccd)', 'ALTER TABLE questions ADD COLUMN eid INTEGER', 'ALTER TABLE exams ADD COLUMN sm TEXT', 'ALTER TABLE exams ADD COLUMN ra INTEGER', 'ALTER TABLE exams ADD COLUMN rb INTEGER', 'ALTER TABLE exams ADD COLUMN sids TEXT', 'CREATE INDEX IF NOT EXISTS ix_q ON questions(eid)',
+    'INSERT INTO questions(q,o,a,subj,lvl,eid) SELECT x.q,x.o,x.a,x.subj,x.lvl,e.id FROM exams e JOIN questions x ON x.eid IS NULL WHERE e.sm IS NULL AND NOT EXISTS (SELECT 1 FROM questions y WHERE y.eid=e.id)',
+    "UPDATE exams SET sm='random' WHERE sm IS NULL"]) await db.execute(x).catch(() => {});
   if (!(await cfg('secret'))) await db.execute({ sql: "INSERT OR IGNORE INTO cfg(k,v) VALUES('secret',?)", args: [crypto.randomBytes(32).toString('hex')] });
   SECRET = await cfg('secret');
 }).catch(e => { ready = null; throw e }));
@@ -61,7 +63,15 @@ async function sweep() {
   const rows = await q('SELECT a.id,a.deadline,e.mode,e.en FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.done=0 AND a.qids IS NOT NULL');
   for (const r of rows) if (now >= (r.mode === 'live' ? r.en : r.deadline)) await grade(r.id);
 }
-const pick = async n => (await q('SELECT id FROM questions ORDER BY RANDOM() LIMIT ?', [n])).map(x => x.id);
+const pickFor = async e => {
+  const m = e.sm || 'random';
+  if (m === 'random') return (await q('SELECT id FROM questions WHERE eid=? ORDER BY RANDOM() LIMIT ?', [e.id, e.cnt])).map(x => x.id);
+  let ids = (await q('SELECT id FROM questions WHERE eid=? ORDER BY id', [e.id])).map(x => x.id);
+  if (m === 'range') ids = ids.slice(Math.max(0, (+e.ra || 1) - 1), +e.rb || ids.length);
+  else { const t = new Set(j(e.sids, [])); ids = ids.filter(i => t.has(i)); }
+  for (let i = ids.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [ids[i], ids[k]] = [ids[k], ids[i]]; }
+  return ids;
+};
 async function mine(b) {
   if (!b.aid || b.tok !== hmac('att' + b.aid)) throw E('Phiên thi không hợp lệ');
   const a = (await q('SELECT * FROM attempts WHERE id=?', [b.aid]))[0];
@@ -69,7 +79,7 @@ async function mine(b) {
   return a;
 }
 
-const busy = async () => { await sweep(); if ((await q('SELECT 1 x FROM attempts WHERE done=0 AND qids IS NOT NULL LIMIT 1')).length) throw E('Đang có thí sinh làm bài, chưa thể xóa câu hỏi lúc này'); };
+const busy = async eid => { await sweep(); if ((await q('SELECT 1 x FROM attempts WHERE done=0 AND qids IS NOT NULL AND eid=? LIMIT 1', [eid ?? -1])).length) throw E('Đang có thí sinh làm bài kỳ thi này, chưa thể xóa câu hỏi lúc này'); };
 
 const H = {
   async astat() { return { set: !!(await cfg('adm')) } },
@@ -97,7 +107,7 @@ const H = {
     return { token: await adminTok() };
   },
   async reg(b) {
-    const cccd = String(b.cccd || '').trim(), name = String(b.name || '').trim().slice(0, 80), unit = String(b.unit || '').trim().slice(0, 80), phone = String(b.phone || '').replace(/[\s.\-]/g, '').slice(0, 20), p = String(b.p || '');
+    const cccd = String(b.cccd || '').trim(), name = String(b.name || '').trim().slice(0, 80), unit = String(b.unit || '').trim().slice(0, 80), phone = String(b.phone || '').trim().slice(0, 20), p = String(b.p || '');
     if (!/^\d{12}$/.test(cccd)) throw E('Số căn cước công dân phải gồm đúng 12 chữ số');
     if (!name) throw E('Vui lòng nhập họ và tên');
     if (p.length < 6) throw E('Mật khẩu tối thiểu 6 ký tự');
@@ -111,53 +121,47 @@ const H = {
     if (!u || !checkPw(String(b.p || ''), u.pw)) { await fail(k); throw E('Sai số căn cước hoặc mật khẩu'); }
     await cset('f:' + k, '0,0'); return uout(u);
   },
-  async uget(b) { const u = await uauth(b); return { cccd: u.cccd, name: u.name, unit: u.unit || '', phone: u.phone || '' }; },
-  async uset(b) {
+  async theme() { return j(await cfg('theme'), {}) },
+  async themeset(b) {
+    const x = JSON.stringify(b.t && typeof b.t === 'object' ? b.t : {});
+    if (x.length > 900000) throw E('Ảnh quá lớn, hãy chọn ảnh nhỏ hơn');
+    await cset('theme', x); return { ok: 1 };
+  },
+  async me(b) { const u = await uauth(b); return { cccd: u.cccd, name: u.name, unit: u.unit, phone: u.phone }; },
+  async meset(b) {
     const u = await uauth(b), name = String(b.name || '').trim().slice(0, 80), unit = String(b.unit || '').trim().slice(0, 80), phone = String(b.phone || '').trim().slice(0, 20);
     if (!name) throw E('Vui lòng nhập họ và tên');
     await q('UPDATE users SET name=?,unit=?,phone=? WHERE cccd=?', [name, unit, phone, u.cccd]);
-    return { ...uout({ cccd: u.cccd, name, unit }), phone };
+    return { name, unit, phone };
   },
-  async upw(b) {
-    const u = await uauth(b), k = 'u' + u.cccd; await locked(k);
+  async mepw(b) {
+    const u = await uauth(b), k = 'u' + u.cccd, p = String(b.p || ''); await locked(k);
     if (!checkPw(String(b.old || ''), u.pw)) { await fail(k); throw E('Mật khẩu hiện tại không đúng'); }
-    const p = String(b.p || '');
     if (p.length < 6) throw E('Mật khẩu mới tối thiểu 6 ký tự');
     await q('UPDATE users SET pw=? WHERE cccd=?', [hashPw(p), u.cccd]); await cset('f:' + k, '0,0');
     return { ok: 1 };
   },
-  async uexams(b) {
-    const u = await uauth(b), L = await H.exams();
-    const m = Object.fromEntries((await q('SELECT eid,done,score,ok FROM attempts WHERE cccd=?', [u.cccd])).map(x => [x.eid, x]));
-    return L.map(x => { const a = m[x.id]; return { ...x, my: a ? (a.done ? 'done' : 'doing') : null, score: a ? a.score : null, ok: a ? a.ok : null }; });
-  },
-  async uhist(b) {
+  async myres(b) {
     const u = await uauth(b); await sweep();
-    const rows = await q('SELECT a.eid,a.qids,a.ans,a.done,a.score,a.ok,a.sub,e.name exam,e.mode FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.cccd=? ORDER BY a.done ASC,a.sub DESC', [u.cccd]);
-    return rows.map(x => ({ eid: x.eid, exam: x.exam, mode: x.mode, done: x.done, score: x.score, ok: x.ok, sub: x.sub, total: j(x.qids, []).length, got: Object.keys(j(x.ans, {})).length }));
-  },
-  async theme() { return j(await cfg('theme'), {}) },
-  async themeset(b) {
-    const x = JSON.stringify(b.t && typeof b.t === 'object' ? b.t : {});
-    if (x.length > 3500000) throw E('Tổng dung lượng ảnh quá lớn, hãy bỏ bớt ảnh hoặc chọn ảnh nhỏ hơn');
-    await cset('theme', x); return { ok: 1 };
+    return (await q('SELECT a.qids,a.done,a.score,a.ok,a.sub,e.name exam FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.cccd=? ORDER BY a.rowid DESC', [u.cccd])).map(r => { const total = j(r.qids, []).length; return { exam: r.exam, done: r.done, score: r.score, ok: r.ok, sub: r.sub, total, wait: !r.qids, right: r.done ? Math.round((r.score || 0) * total / 100) : 0 }; });
   },
   async ul() { return q('SELECT cccd,name,unit,phone,created FROM users ORDER BY created DESC') },
   async ures(b) { const c = String(b.cccd || ''); await q('UPDATE users SET pw=? WHERE cccd=?', [hashPw(c.slice(-6)), c]); return { ok: 1 } },
   async ud(b) { await q('DELETE FROM users WHERE cccd=?', [String(b.cccd || '')]); return { ok: 1 } },
   async exams() {
     const n = Date.now();
-    return q("SELECT id,name,mode,dur,cnt,status,en,t1,t2 FROM exams WHERE (mode='free' AND status='open' AND (t1 IS NULL OR t1<=?) AND (t2 IS NULL OR t2>=?)) OR (mode='live' AND (status='waiting' OR (status='running' AND en>?))) ORDER BY id DESC", [n, n, n]);
+    return q("SELECT id,name,mode,dur,cnt,status,en FROM exams WHERE (mode='free' AND status='open' AND (t1 IS NULL OR t1<=?) AND (t2 IS NULL OR t2>=?)) OR (mode='live' AND (status='waiting' OR (status='running' AND en>?))) ORDER BY id DESC", [n, n, n]);
   },
   async join(b) {
     const u = await uauth(b), e = await getExam(b.eid), now = Date.now();
     if (e.mode === 'free' && (e.status !== 'open' || (e.t1 && now < e.t1) || (e.t2 && now > e.t2))) throw E('Kỳ thi hiện chưa mở hoặc đã đóng');
     if (e.mode === 'live' && (e.status === 'ended' || (e.status === 'running' && now >= e.en))) throw E('Kỳ thi đã kết thúc');
-    if (!(await q('SELECT 1 x FROM questions LIMIT 1')).length) throw E('Ngân hàng câu hỏi đang trống, vui lòng liên hệ quản trị');
+    if (!(await q('SELECT 1 x FROM questions WHERE eid=? LIMIT 1', [e.id])).length) throw E('Kỳ thi chưa có câu hỏi, vui lòng liên hệ quản trị');
     const prev = (await q('SELECT id,done FROM attempts WHERE eid=? AND cccd=?', [e.id, u.cccd]))[0];
     if (prev) { if (prev.done) throw E('Bạn đã nộp bài kỳ thi này'); return { aid: prev.id, tok: hmac('att' + prev.id) }; }
     const id = crypto.randomUUID();
-    const ids = e.mode === 'free' || e.status === 'running' ? await pick(e.cnt) : null;
+    const ids = e.mode === 'free' || e.status === 'running' ? await pickFor(e) : null;
+    if (ids && !ids.length) throw E('Kỳ thi chưa có câu hỏi, vui lòng liên hệ quản trị');
     await q('INSERT INTO attempts(id,eid,name,unit,phone,cccd,qids,deadline) VALUES(?,?,?,?,?,?,?,?)', [id, e.id, u.name, u.unit, u.phone, u.cccd, ids && JSON.stringify(ids), e.mode === 'free' ? now + e.dur * 60000 : null]);
     return { aid: id, tok: hmac('att' + id) };
   },
@@ -168,7 +172,7 @@ const H = {
     if (e.mode === 'live') {
       if (e.status === 'waiting') return { s: 'wait', exam: e.name, n: (await q('SELECT COUNT(*) c FROM attempts WHERE eid=?', [e.id]))[0].c };
       if (e.status === 'ended' && !a.qids) return { s: 'ended', exam: e.name };
-      if (!a.qids) { await q('UPDATE attempts SET qids=? WHERE id=? AND qids IS NULL', [JSON.stringify(await pick(e.cnt)), a.id]); a = (await q('SELECT * FROM attempts WHERE id=?', [a.id]))[0]; }
+      if (!a.qids) { const pk = await pickFor(e); if (!pk.length) throw E('Kỳ thi chưa có câu hỏi'); await q('UPDATE attempts SET qids=? WHERE id=? AND qids IS NULL', [JSON.stringify(pk), a.id]); a = (await q('SELECT * FROM attempts WHERE id=?', [a.id]))[0]; }
     }
     const dl = eff(a, e);
     if (now >= dl) return res(await grade(a.id));
@@ -193,30 +197,46 @@ const H = {
     const c = async s => (await q(s))[0].c;
     return { run: await c("SELECT COUNT(*) c FROM exams WHERE status IN ('open','running','waiting')"), att: await c('SELECT COUNT(*) c FROM attempts'), qn: await c('SELECT COUNT(*) c FROM questions'), done: await c('SELECT COUNT(*) c FROM attempts WHERE done=1'), pass: await c('SELECT COUNT(*) c FROM attempts WHERE ok=1'), avg: (await q('SELECT AVG(score) v FROM attempts WHERE done=1'))[0].v };
   },
-  async ql() { return (await q('SELECT * FROM questions ORDER BY id DESC')).map(r => ({ ...r, o: j(r.o, []) })); },
+  async ql(b) { return (await q('SELECT * FROM questions WHERE eid=? ORDER BY id', [+b.eid || 0])).map(r => ({ ...r, o: j(r.o, []) })); },
   async qs(b) {
     const o = JSON.stringify((b.o || []).slice(0, 4).map(String));
     if (!b.q || (b.o || []).length < 2) throw E('Thiếu nội dung câu hỏi hoặc đáp án');
     if (!(+b.a >= 0 && +b.a < Math.min(4, b.o.length))) throw E('Chưa chọn đáp án đúng hợp lệ');
     if (b.id) await q('UPDATE questions SET q=?,o=?,a=?,subj=?,lvl=? WHERE id=?', [b.q, o, +b.a, b.subj, b.lvl, b.id]);
-    else await q('INSERT INTO questions(q,o,a,subj,lvl) VALUES(?,?,?,?,?)', [b.q, o, +b.a, b.subj, b.lvl]);
+    else { await getExam(b.eid); await q('INSERT INTO questions(q,o,a,subj,lvl,eid) VALUES(?,?,?,?,?,?)', [b.q, o, +b.a, b.subj, b.lvl, +b.eid]); }
     return { ok: 1 };
   },
-  async qd(b) { await busy(); await q('DELETE FROM questions WHERE id=?', [b.id]); return { ok: 1 }; },
-  async qda() { await busy(); await q('DELETE FROM questions'); return { ok: 1 }; },
+  async qd(b) { const x = (await q('SELECT eid FROM questions WHERE id=?', [b.id]))[0]; await busy(x && x.eid); await q('DELETE FROM questions WHERE id=?', [b.id]); return { ok: 1 }; },
+  async qda(b) { await busy(+b.eid); await q('DELETE FROM questions WHERE eid=?', [+b.eid]); return { ok: 1 }; },
+  async qold() { return { n: (await q('SELECT COUNT(*) c FROM questions WHERE eid IS NULL'))[0].c }; },
+  async qcp(b) {
+    const e = await getExam(b.eid), old = b.from === 'old';
+    if (!old) await getExam(b.from);
+    const r = await db.execute({ sql: `INSERT INTO questions(q,o,a,subj,lvl,eid) SELECT q,o,a,subj,lvl,? FROM questions WHERE ${old ? 'eid IS NULL' : 'eid=?'} ORDER BY id`, args: old ? [e.id] : [e.id, +b.from] });
+    return { n: r.rowsAffected };
+  },
   async el() {
-    return q('SELECT e.*,(SELECT COUNT(*) FROM attempts WHERE eid=e.id) n FROM exams e ORDER BY id DESC');
+    return q('SELECT e.*,(SELECT COUNT(*) FROM attempts WHERE eid=e.id) n,(SELECT COUNT(*) FROM questions WHERE eid=e.id) qn FROM exams e ORDER BY id DESC');
   },
   async es(b) {
     if (!b.name) throw E('Vui lòng nhập tên kỳ thi');
+    const dur = Math.max(1, +b.dur || 30), cnt = Math.max(1, +b.cnt || 10), t1 = b.t1 || null, t2 = b.t2 || null;
+    if (b.id) { await getExam(b.id); await q('UPDATE exams SET name=?,dur=?,cnt=?,t1=?,t2=? WHERE id=?', [b.name, dur, cnt, t1, t2, b.id]); return { ok: 1 }; }
     const live = b.mode === 'live';
-    await q('INSERT INTO exams(name,mode,dur,cnt,t1,t2,status) VALUES(?,?,?,?,?,?,?)', [b.name, live ? 'live' : 'free', Math.max(1, +b.dur || 30), Math.max(1, +b.cnt || 10), b.t1 || null, b.t2 || null, live ? 'waiting' : 'open']);
+    await q('INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm) VALUES(?,?,?,?,?,?,?,?)', [b.name, live ? 'live' : 'free', dur, cnt, t1, t2, live ? 'waiting' : 'open', 'random']);
     return { ok: 1 };
   },
-  async ed(b) { await q('DELETE FROM attempts WHERE eid=?', [b.id]); await q('DELETE FROM exams WHERE id=?', [b.id]); return { ok: 1 }; },
+  async esel(b) {
+    const e = await getExam(b.id), sm = ['random', 'range', 'manual'].includes(b.sm) ? b.sm : 'random';
+    const ids = (Array.isArray(b.sids) ? b.sids : []).map(Number).filter(Number.isInteger);
+    const ra = Math.max(1, +b.ra || 1), rb = Math.max(ra, +b.rb || ra);
+    await q('UPDATE exams SET sm=?,cnt=?,ra=?,rb=?,sids=? WHERE id=?', [sm, Math.max(1, +b.cnt || e.cnt), ra, rb, JSON.stringify(ids), e.id]);
+    return { ok: 1 };
+  },
+  async ed(b) { await q('DELETE FROM questions WHERE eid=?', [b.id]); await q('DELETE FROM attempts WHERE eid=?', [b.id]); await q('DELETE FROM exams WHERE id=?', [b.id]); return { ok: 1 }; },
   async start(b) {
     const e = await getExam(b.id), now = Date.now();
-    if (e.mode === 'live' && !(await q('SELECT 1 x FROM questions LIMIT 1')).length) throw E('Ngân hàng câu hỏi đang trống');
+    if (e.mode === 'live' && !(await pickFor(e)).length) throw E('Kỳ thi chưa có câu hỏi, hãy thêm câu hỏi trước khi bắt đầu');
     if (e.mode === 'live') await q("UPDATE exams SET status='running',st=?,en=? WHERE id=?", [now, now + e.dur * 60000, e.id]);
     else await q("UPDATE exams SET status='open' WHERE id=?", [e.id]);
     return { ok: 1 };
@@ -235,8 +255,9 @@ const H = {
   async qi(b) {
     const L = (Array.isArray(b.list) ? b.list : []).slice(0, 500).map(x => ({ q: String(x.q || '').trim(), o: (x.o || []).map(s => String(s).trim()).filter(Boolean).slice(0, 4), a: +x.a, s: x.s || 'Pháp luật', l: x.l || 'Trung bình' })).filter(x => x.q && x.o.length >= 2 && x.a >= 0 && x.a < x.o.length);
     if (!L.length) throw E('Không có câu hỏi hợp lệ để nhập');
-    if (b.replace) await busy();
-    await db.batch([...(b.replace ? [{ sql: 'DELETE FROM questions', args: [] }] : []), ...L.map(x => ({ sql: 'INSERT INTO questions(q,o,a,subj,lvl) VALUES(?,?,?,?,?)', args: [x.q, JSON.stringify(x.o), x.a, x.s, x.l] }))]);
+    const eid = (await getExam(b.eid)).id;
+    if (b.replace) await busy(eid);
+    await db.batch([...(b.replace ? [{ sql: 'DELETE FROM questions WHERE eid=?', args: [eid] }] : []), ...L.map(x => ({ sql: 'INSERT INTO questions(q,o,a,subj,lvl,eid) VALUES(?,?,?,?,?,?)', args: [x.q, JSON.stringify(x.o), x.a, x.s, x.l, eid] }))]);
     return { ok: 1, n: L.length };
   },
   async mon(b) {
@@ -250,7 +271,7 @@ const H = {
     return q('SELECT a.name,a.unit,a.phone,a.score,a.ok,a.sub,e.name exam FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.done=1 ORDER BY a.sub DESC');
   }
 };
-const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'chpw', 'themeset', 'ul', 'ures', 'ud']);
+const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud']);
 
 module.exports = async (req, res) => {
   try {
