@@ -133,8 +133,23 @@ const H = {
   async theme() { return j(await cfg('theme'), {}) },
   async themeset(b) {
     const x = JSON.stringify(b.t && typeof b.t === 'object' ? b.t : {});
-    if (x.length > 900000) throw E('Ảnh quá lớn, hãy chọn ảnh nhỏ hơn');
+    if (x.length > 2500000) throw E('Ảnh quá lớn, hãy chọn ảnh nhỏ hơn');
     await cset('theme', x); return { ok: 1 };
+  },
+  async mex(b) {
+    const u = await uauth(b), now = Date.now();
+    const ex = await q("SELECT id,name,mode,dur,cnt,status,en,sm,ra,rb,sids,t1,t2,(SELECT COUNT(*) FROM questions WHERE eid=exams.id) qn FROM exams WHERE (mode='free' AND status='open' AND (t1 IS NULL OR t1<=?) AND (t2 IS NULL OR t2>=?)) OR (mode='live' AND (status='waiting' OR (status='running' AND en>?))) OR id IN (SELECT eid FROM attempts WHERE cccd=?) ORDER BY id DESC", [now, now, now, u.cccd]);
+    const by = Object.fromEntries((await q('SELECT eid,done,score,ok FROM attempts WHERE cccd=?', [u.cccd])).map(a => [a.eid, a]));
+    return ex.map(e => {
+      const m = e.sm || 'random', qn = e.qn, a = by[e.id];
+      const nq = m === 'papers' ? e.cnt : m === 'range' ? Math.max(0, Math.min(+e.rb || qn, qn) - (+e.ra || 1) + 1) : m === 'manual' ? j(e.sids, []).length : Math.min(e.cnt, qn);
+      return { id: e.id, name: e.name, mode: e.mode, dur: e.dur, status: e.status, nq, st: a ? (a.done ? 'done' : 'doing') : 'none', score: a ? a.score : null };
+    });
+  },
+  async news() { return j(await cfg('news'), []); },
+  async newsset(b) {
+    const L = (Array.isArray(b.l) ? b.l : []).slice(0, 30).map(x => ({ t: String(x.t || '').trim().slice(0, 120), c: String(x.c || '').trim().slice(0, 400), d: String(x.d || '').trim().slice(0, 20) })).filter(x => x.t);
+    await cset('news', JSON.stringify(L)); return { ok: 1 };
   },
   async me(b) { const u = await uauth(b); return { cccd: u.cccd, name: u.name, unit: u.unit, phone: u.phone }; },
   async meset(b) {
@@ -306,7 +321,7 @@ const H = {
     return q('SELECT a.name,a.unit,a.phone,a.cccd,a.score,a.ok,a.sub,a.st,a.rc,a.tt,e.id eid,e.name exam,e.pass FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.done=1 ORDER BY a.sub DESC');
   }
 };
-const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'pgen', 'pl', 'pd', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud']);
+const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'newsset', 'pgen', 'pl', 'pd', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud']);
 
 module.exports = async (req, res) => {
   try {
