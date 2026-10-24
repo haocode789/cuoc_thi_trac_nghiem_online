@@ -19,7 +19,7 @@ const init = () => ready || (ready = db.batch([
   'CREATE TABLE IF NOT EXISTS users(cccd TEXT PRIMARY KEY,name TEXT,unit TEXT,phone TEXT,pw TEXT,created INTEGER)',
   'CREATE TABLE IF NOT EXISTS papers(id INTEGER PRIMARY KEY AUTOINCREMENT,eid INTEGER,no INTEGER,qids TEXT)'
 ]).then(async () => {
-  for (const x of ['ALTER TABLE attempts ADD COLUMN cccd TEXT', 'DROP INDEX IF EXISTS ux_att', 'CREATE UNIQUE INDEX IF NOT EXISTS ux_att2 ON attempts(eid,cccd)', 'ALTER TABLE questions ADD COLUMN eid INTEGER', 'ALTER TABLE exams ADD COLUMN sm TEXT', 'ALTER TABLE exams ADD COLUMN ra INTEGER', 'ALTER TABLE exams ADD COLUMN rb INTEGER', 'ALTER TABLE exams ADD COLUMN sids TEXT', 'ALTER TABLE attempts ADD COLUMN st INTEGER', 'ALTER TABLE attempts ADD COLUMN rc INTEGER', 'ALTER TABLE attempts ADD COLUMN tt INTEGER', 'ALTER TABLE attempts ADD COLUMN pid INTEGER', 'ALTER TABLE exams ADD COLUMN pass INTEGER', 'CREATE INDEX IF NOT EXISTS ix_q ON questions(eid)',
+  for (const x of ['ALTER TABLE attempts ADD COLUMN cccd TEXT', 'DROP INDEX IF EXISTS ux_att', 'DROP INDEX IF EXISTS ux_att2', 'CREATE INDEX IF NOT EXISTS ix_att3 ON attempts(eid,cccd)', 'ALTER TABLE questions ADD COLUMN eid INTEGER', 'ALTER TABLE exams ADD COLUMN sm TEXT', 'ALTER TABLE exams ADD COLUMN ra INTEGER', 'ALTER TABLE exams ADD COLUMN rb INTEGER', 'ALTER TABLE exams ADD COLUMN sids TEXT', 'ALTER TABLE attempts ADD COLUMN st INTEGER', 'ALTER TABLE attempts ADD COLUMN rc INTEGER', 'ALTER TABLE attempts ADD COLUMN tt INTEGER', 'ALTER TABLE attempts ADD COLUMN pid INTEGER', 'ALTER TABLE exams ADD COLUMN pass INTEGER', 'ALTER TABLE exams ADD COLUMN max_att INTEGER DEFAULT 1', "ALTER TABLE exams ADD COLUMN eval_mode TEXT DEFAULT 'pass_fail'", 'ALTER TABLE exams ADD COLUMN pass_cnt INTEGER DEFAULT 0', 'CREATE INDEX IF NOT EXISTS ix_q ON questions(eid)',
     'INSERT INTO questions(q,o,a,subj,lvl,eid) SELECT x.q,x.o,x.a,x.subj,x.lvl,e.id FROM exams e JOIN questions x ON x.eid IS NULL WHERE e.sm IS NULL AND NOT EXISTS (SELECT 1 FROM questions y WHERE y.eid=e.id)',
     "UPDATE exams SET sm='random' WHERE sm IS NULL"]) await db.execute(x).catch(() => {});
   if (!(await cfg('secret'))) await db.execute({ sql: "INSERT OR IGNORE INTO cfg(k,v) VALUES('secret',?)", args: [crypto.randomBytes(32).toString('hex')] });
@@ -48,6 +48,7 @@ const uauth = async b => {
 const getExam = async id => { const e = (await q('SELECT * FROM exams WHERE id=?', [id]))[0]; if (!e) throw E('Không tìm thấy kỳ thi'); return e };
 const eff = (a, e) => e.mode === 'live' ? e.en : a.deadline;
 
+const verdict = (e, right, total, score) => e.eval_mode === 'rank' ? 1 : ((+e.pass_cnt > 0 ? right >= +e.pass_cnt : score >= (e.pass ?? PASS)) ? 1 : 0);
 async function grade(id) {
   const a = (await q('SELECT * FROM attempts WHERE id=?', [id]))[0];
   if (!a || a.done) return a;
@@ -56,7 +57,7 @@ async function grade(id) {
   const key = Object.fromEntries(qs.map(x => [x.id, x.a]));
   const right = ids.filter((id, i) => ans[i] === key[id]).length;
   const score = ids.length ? Math.round(right / ids.length * 1000) / 10 : 0;
-  const e = await getExam(a.eid), okk = score >= (e.pass ?? PASS) ? 1 : 0;
+  const e = await getExam(a.eid), okk = verdict(e, right, ids.length, score);
   await q('UPDATE attempts SET done=1,score=?,ok=?,sub=?,rc=?,tt=? WHERE id=?', [score, okk, Math.min(Date.now(), eff(a, e) || Date.now()), right, ids.length, id]);
   return { ...a, done: 1, score, ok: okk };
 }
@@ -138,12 +139,13 @@ const H = {
   },
   async mex(b) {
     const u = await uauth(b), now = Date.now();
-    const ex = await q("SELECT id,name,mode,dur,cnt,status,en,sm,ra,rb,sids,t1,t2,(SELECT COUNT(*) FROM questions WHERE eid=exams.id) qn FROM exams WHERE (mode='free' AND status='open' AND (t1 IS NULL OR t1<=?) AND (t2 IS NULL OR t2>=?)) OR (mode='live' AND (status='waiting' OR (status='running' AND en>?))) OR id IN (SELECT eid FROM attempts WHERE cccd=?) ORDER BY id DESC", [now, now, now, u.cccd]);
-    const by = Object.fromEntries((await q('SELECT eid,done,score,ok FROM attempts WHERE cccd=?', [u.cccd])).map(a => [a.eid, a]));
+    const ex = await q("SELECT id,name,mode,dur,cnt,status,en,sm,ra,rb,sids,t1,t2,max_att,eval_mode,(SELECT COUNT(*) FROM questions WHERE eid=exams.id) qn FROM exams WHERE (mode='free' AND status='open' AND (t1 IS NULL OR t1<=?) AND (t2 IS NULL OR t2>=?)) OR (mode='live' AND (status='waiting' OR (status='running' AND en>?))) OR id IN (SELECT eid FROM attempts WHERE cccd=?) ORDER BY id DESC", [now, now, now, u.cccd]);
+    const by = {}, cn = {};
+    for (const a of await q('SELECT eid,done,score,ok FROM attempts WHERE cccd=? ORDER BY rowid', [u.cccd])) { by[a.eid] = a; cn[a.eid] = (cn[a.eid] || 0) + 1; }
     return ex.map(e => {
       const m = e.sm || 'random', qn = e.qn, a = by[e.id];
       const nq = m === 'papers' ? e.cnt : m === 'range' ? Math.max(0, Math.min(+e.rb || qn, qn) - (+e.ra || 1) + 1) : m === 'manual' ? j(e.sids, []).length : Math.min(e.cnt, qn);
-      return { id: e.id, name: e.name, mode: e.mode, dur: e.dur, status: e.status, nq, st: a ? (a.done ? 'done' : 'doing') : 'none', score: a ? a.score : null };
+      return { id: e.id, name: e.name, mode: e.mode, dur: e.dur, status: e.status, nq, st: a ? (a.done ? 'done' : 'doing') : 'none', score: a ? a.score : null, na: cn[e.id] || 0, mx: e.mode === 'live' ? 1 : (e.max_att ?? 1), ev: e.eval_mode, can: !!(a && a.done && e.mode === 'free' && e.status === 'open' && ((e.max_att ?? 1) === 0 || cn[e.id] < (e.max_att ?? 1))) };
     });
   },
   async news() { return j(await cfg('news'), []); },
@@ -167,7 +169,7 @@ const H = {
   },
   async myres(b) {
     const u = await uauth(b); await sweep();
-    return (await q('SELECT a.qids,a.done,a.score,a.ok,a.sub,e.name exam FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.cccd=? ORDER BY a.rowid DESC', [u.cccd])).map(r => { const total = j(r.qids, []).length; return { exam: r.exam, done: r.done, score: r.score, ok: r.ok, sub: r.sub, total, wait: !r.qids, right: r.done ? Math.round((r.score || 0) * total / 100) : 0 }; });
+    return (await q('SELECT a.qids,a.done,a.score,a.ok,a.sub,e.name exam,e.eval_mode mode FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.cccd=? ORDER BY a.rowid DESC', [u.cccd])).map(r => { const total = j(r.qids, []).length; return { exam: r.exam, mode: r.mode, done: r.done, score: r.score, ok: r.ok, sub: r.sub, total, wait: !r.qids, right: r.done ? Math.round((r.score || 0) * total / 100) : 0 }; });
   },
   async ul() { return q('SELECT cccd,name,unit,phone,created FROM users ORDER BY created DESC') },
   async ures(b) { const c = String(b.cccd || ''); await q('UPDATE users SET pw=? WHERE cccd=?', [hashPw(c.slice(-6)), c]); return { ok: 1 } },
@@ -181,8 +183,10 @@ const H = {
     if (e.mode === 'free' && (e.status !== 'open' || (e.t1 && now < e.t1) || (e.t2 && now > e.t2))) throw E('Kỳ thi hiện chưa mở hoặc đã đóng');
     if (e.mode === 'live' && (e.status === 'ended' || (e.status === 'running' && now >= e.en))) throw E('Kỳ thi đã kết thúc');
     if (!(await q('SELECT 1 x FROM questions WHERE eid=? LIMIT 1', [e.id])).length) throw E('Kỳ thi chưa có câu hỏi, vui lòng liên hệ quản trị');
-    const prev = (await q('SELECT id,done FROM attempts WHERE eid=? AND cccd=?', [e.id, u.cccd]))[0];
-    if (prev) { if (prev.done) throw E('Bạn đã nộp bài kỳ thi này'); return { aid: prev.id, tok: hmac('att' + prev.id) }; }
+    const all = await q('SELECT id,done FROM attempts WHERE eid=? AND cccd=? ORDER BY rowid', [e.id, u.cccd]), prev = all[all.length - 1];
+    if (prev && !prev.done) return { aid: prev.id, tok: hmac('att' + prev.id) };
+    const mx = e.mode === 'live' ? 1 : (e.max_att ?? 1);
+    if (all.length && mx > 0 && all.length >= mx) throw E(mx === 1 ? 'Bạn đã nộp bài kỳ thi này' : 'Bạn đã dùng hết ' + mx + ' lượt thi');
     const id = crypto.randomUUID();
     const set = e.mode === 'free' || e.status === 'running' ? await getSet(e) : null, ids = set && set.ids;
     if (ids && !ids.length) throw E('Kỳ thi chưa có câu hỏi, vui lòng liên hệ quản trị');
@@ -191,7 +195,7 @@ const H = {
   },
   async state(b) {
     let a = await mine(b); const e = await getExam(a.eid), now = Date.now();
-    const res = x => ({ s: 'done', score: x.score, ok: x.ok, exam: e.name });
+    const res = x => ({ s: 'done', score: x.score, ok: x.ok, exam: e.name, rank: e.eval_mode === 'rank' ? 1 : 0 });
     if (a.done) return res(a);
     if (e.mode === 'live') {
       if (e.status === 'waiting') return { s: 'wait', exam: e.name, n: (await q('SELECT COUNT(*) c FROM attempts WHERE eid=?', [e.id]))[0].c };
@@ -240,20 +244,24 @@ const H = {
     return { n: r.rowsAffected };
   },
   async el() {
-    return q('SELECT e.*,(SELECT COUNT(*) FROM attempts WHERE eid=e.id) n,(SELECT COUNT(*) FROM questions WHERE eid=e.id) qn,(SELECT COUNT(*) FROM papers WHERE eid=e.id) pn FROM exams e ORDER BY id DESC');
+    return q('SELECT e.*,(SELECT COUNT(DISTINCT cccd) FROM attempts WHERE eid=e.id) n,(SELECT COUNT(DISTINCT cccd) FROM attempts WHERE eid=e.id AND done=1) dn,(SELECT COUNT(*) FROM questions WHERE eid=e.id) qn,(SELECT COUNT(*) FROM papers WHERE eid=e.id) pn FROM exams e ORDER BY id DESC');
   },
   async es(b) {
     if (!b.name) throw E('Vui lòng nhập tên kỳ thi');
     const old = b.id ? await getExam(b.id) : null;
     const dur = Math.max(1, +b.dur || (old ? old.dur : 30)), cnt = Math.max(1, +b.cnt || (old ? old.cnt : 10)), t1 = b.t1 || null, t2 = b.t2 || null;
     const pass = b.pass === undefined || b.pass === null || b.pass === '' ? (old ? (old.pass ?? PASS) : PASS) : Math.min(100, Math.max(0, +b.pass || 0));
+    const em = b.eval_mode === 'rank' ? 'rank' : b.eval_mode === 'pass_fail' ? 'pass_fail' : (old ? old.eval_mode || 'pass_fail' : 'pass_fail');
+    const ma = b.max_att === undefined || b.max_att === null || b.max_att === '' ? (old ? (old.max_att ?? 1) : 1) : Math.max(0, Math.floor(+b.max_att || 0));
+    const pc = b.pass_cnt === undefined || b.pass_cnt === null || b.pass_cnt === '' ? (old ? (old.pass_cnt || 0) : 0) : Math.max(0, Math.floor(+b.pass_cnt || 0));
     if (old) {
-      await q('UPDATE exams SET name=?,dur=?,cnt=?,t1=?,t2=?,pass=? WHERE id=?', [b.name, dur, cnt, t1, t2, pass, old.id]);
-      await q('UPDATE attempts SET ok=(CASE WHEN score>=? THEN 1 ELSE 0 END) WHERE eid=? AND done=1', [pass, old.id]);
+      await q('UPDATE exams SET name=?,dur=?,cnt=?,t1=?,t2=?,pass=?,max_att=?,eval_mode=?,pass_cnt=? WHERE id=?', [b.name, dur, cnt, t1, t2, pass, ma, em, pc, old.id]);
+      const ne = { ...old, pass, eval_mode: em, pass_cnt: pc };
+      for (const a of await q('SELECT id,score,rc,tt FROM attempts WHERE eid=? AND done=1', [old.id])) await q('UPDATE attempts SET ok=? WHERE id=?', [verdict(ne, a.rc ?? 0, a.tt ?? 0, a.score), a.id]);
       return { ok: 1, id: old.id };
     }
     const live = b.mode === 'live';
-    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,pass) VALUES(?,?,?,?,?,?,?,?,?)', args: [b.name, live ? 'live' : 'free', dur, cnt, t1, t2, live ? 'waiting' : 'open', 'random', pass] });
+    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,pass,max_att,eval_mode,pass_cnt) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)', args: [b.name, live ? 'live' : 'free', dur, cnt, t1, t2, live ? 'waiting' : 'open', 'random', pass, live ? 1 : ma, em, pc] });
     return { ok: 1, id: Number(r.lastInsertRowid) };
   },
   async pgen(b) {
@@ -316,9 +324,9 @@ const H = {
     const rows = await q('SELECT id,name,unit,phone,qids,ans,done,score,ok FROM attempts WHERE eid=? ORDER BY name', [e.id]);
     return { e, at: rows.map(r => ({ id: r.id, name: r.name, unit: r.unit, phone: r.phone, total: j(r.qids, []).length, got: Object.keys(j(r.ans, {})).length, done: r.done, score: r.score, ok: r.ok })) };
   },
-  async res() {
+  async res(b) {
     await sweep();
-    return q('SELECT a.name,a.unit,a.phone,a.cccd,a.score,a.ok,a.sub,a.st,a.rc,a.tt,e.id eid,e.name exam,e.pass FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.done=1 ORDER BY a.sub DESC');
+    return q('SELECT a.name,a.unit,a.phone,a.cccd,a.score,a.ok,a.sub,a.st,a.rc,a.tt,e.id eid,e.name exam,e.pass,e.pass_cnt,e.eval_mode FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.done=1' + (b && b.eid ? ' AND a.eid=?' : '') + ' ORDER BY a.sub DESC', b && b.eid ? [+b.eid] : []);
   }
 };
 const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'newsset', 'pgen', 'pl', 'pd', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud']);
