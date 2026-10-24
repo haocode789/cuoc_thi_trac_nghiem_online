@@ -101,7 +101,6 @@ const H = {
     if (!/^\d{12}$/.test(cccd)) throw E('Số căn cước công dân phải gồm đúng 12 chữ số');
     if (!name) throw E('Vui lòng nhập họ và tên');
     if (p.length < 6) throw E('Mật khẩu tối thiểu 6 ký tự');
-    if (phone && !/^\+?\d{9,12}$/.test(phone)) throw E('Số điện thoại không hợp lệ');
     if ((await q('SELECT 1 x FROM users WHERE cccd=?', [cccd])).length) throw E('Số căn cước này đã có tài khoản, hãy đăng nhập');
     await q('INSERT INTO users(cccd,name,unit,phone,pw,created) VALUES(?,?,?,?,?,?)', [cccd, name, unit, phone, hashPw(p), Date.now()]);
     return uout({ cccd, name, unit });
@@ -112,10 +111,35 @@ const H = {
     if (!u || !checkPw(String(b.p || ''), u.pw)) { await fail(k); throw E('Sai số căn cước hoặc mật khẩu'); }
     await cset('f:' + k, '0,0'); return uout(u);
   },
+  async uget(b) { const u = await uauth(b); return { cccd: u.cccd, name: u.name, unit: u.unit || '', phone: u.phone || '' }; },
+  async uset(b) {
+    const u = await uauth(b), name = String(b.name || '').trim().slice(0, 80), unit = String(b.unit || '').trim().slice(0, 80), phone = String(b.phone || '').trim().slice(0, 20);
+    if (!name) throw E('Vui lòng nhập họ và tên');
+    await q('UPDATE users SET name=?,unit=?,phone=? WHERE cccd=?', [name, unit, phone, u.cccd]);
+    return { ...uout({ cccd: u.cccd, name, unit }), phone };
+  },
+  async upw(b) {
+    const u = await uauth(b), k = 'u' + u.cccd; await locked(k);
+    if (!checkPw(String(b.old || ''), u.pw)) { await fail(k); throw E('Mật khẩu hiện tại không đúng'); }
+    const p = String(b.p || '');
+    if (p.length < 6) throw E('Mật khẩu mới tối thiểu 6 ký tự');
+    await q('UPDATE users SET pw=? WHERE cccd=?', [hashPw(p), u.cccd]); await cset('f:' + k, '0,0');
+    return { ok: 1 };
+  },
+  async uexams(b) {
+    const u = await uauth(b), L = await H.exams();
+    const m = Object.fromEntries((await q('SELECT eid,done,score,ok FROM attempts WHERE cccd=?', [u.cccd])).map(x => [x.eid, x]));
+    return L.map(x => { const a = m[x.id]; return { ...x, my: a ? (a.done ? 'done' : 'doing') : null, score: a ? a.score : null, ok: a ? a.ok : null }; });
+  },
+  async uhist(b) {
+    const u = await uauth(b); await sweep();
+    const rows = await q('SELECT a.eid,a.qids,a.ans,a.done,a.score,a.ok,a.sub,e.name exam,e.mode FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.cccd=? ORDER BY a.done ASC,a.sub DESC', [u.cccd]);
+    return rows.map(x => ({ eid: x.eid, exam: x.exam, mode: x.mode, done: x.done, score: x.score, ok: x.ok, sub: x.sub, total: j(x.qids, []).length, got: Object.keys(j(x.ans, {})).length }));
+  },
   async theme() { return j(await cfg('theme'), {}) },
   async themeset(b) {
     const x = JSON.stringify(b.t && typeof b.t === 'object' ? b.t : {});
-    if (x.length > 900000) throw E('Ảnh quá lớn, hãy chọn ảnh nhỏ hơn');
+    if (x.length > 3500000) throw E('Tổng dung lượng ảnh quá lớn, hãy bỏ bớt ảnh hoặc chọn ảnh nhỏ hơn');
     await cset('theme', x); return { ok: 1 };
   },
   async ul() { return q('SELECT cccd,name,unit,phone,created FROM users ORDER BY created DESC') },
@@ -123,7 +147,7 @@ const H = {
   async ud(b) { await q('DELETE FROM users WHERE cccd=?', [String(b.cccd || '')]); return { ok: 1 } },
   async exams() {
     const n = Date.now();
-    return q("SELECT id,name,mode,dur,cnt,status,en FROM exams WHERE (mode='free' AND status='open' AND (t1 IS NULL OR t1<=?) AND (t2 IS NULL OR t2>=?)) OR (mode='live' AND (status='waiting' OR (status='running' AND en>?))) ORDER BY id DESC", [n, n, n]);
+    return q("SELECT id,name,mode,dur,cnt,status,en,t1,t2 FROM exams WHERE (mode='free' AND status='open' AND (t1 IS NULL OR t1<=?) AND (t2 IS NULL OR t2>=?)) OR (mode='live' AND (status='waiting' OR (status='running' AND en>?))) ORDER BY id DESC", [n, n, n]);
   },
   async join(b) {
     const u = await uauth(b), e = await getExam(b.eid), now = Date.now();
