@@ -12,7 +12,7 @@ const j = (s, d) => { try { return JSON.parse(s) ?? d } catch (e) { return d } }
 
 const SCHEMA = 5;
 const IMGK = ['logo', 'hero', 'banner'];
-const HOT = new Set(['adm', 'admu', 'secret']);   // cấu hình ít đổi: giữ trong bộ nhớ, không hỏi DB mỗi request
+const HOT = new Set(['adm', 'admu', 'secret', 'subu', 'subpw']);   // cấu hình ít đổi: giữ trong bộ nhớ, không hỏi DB mỗi request
 const CC = new Map();
 const cfg = async k => {
   if (HOT.has(k)) { const c = CC.get(k); if (c && Date.now() - c.t < 30000) return c.v; }
@@ -70,6 +70,12 @@ const locked = async k => { const [, t] = await gf(k); if (t > Date.now()) throw
 const fail = async k => { const [n] = await gf(k), m = n + 1; await cset('f:' + k, m >= 5 ? '0,' + (Date.now() + 300000) : m + ',0'); await new Promise(r => setTimeout(r, 500)) };
 const adminTok = async () => { const x = Date.now() + 12 * 3600e3; return x + '.' + hmac('adm' + x + await cfg('adm')) };
 const isAdmin = async req => { const [x, s] = String(req.headers.authorization || '').replace('Bearer ', '').split('.'), h = await cfg('adm'); return !!(x && s && h && +x > Date.now() && same(s, hmac('adm' + x + h))) };
+const subTok = async () => { const x = Date.now() + 12 * 3600e3; return 'sub.' + x + '.' + hmac('sub' + x + await cfg('subpw')); };
+const role = async req => {
+  if (await isAdmin(req)) return 'admin';
+  const [t, x, s] = String(req.headers.authorization || '').replace('Bearer ', '').split('.'), h = await cfg('subpw');
+  return t === 'sub' && x && s && h && +x > Date.now() && same(s, hmac('sub' + x + h)) ? 'sub' : null;
+};
 const utok = c => { const x = Date.now() + 30 * 864e5; return c + '.' + x + '.' + hmac('usr' + c + x) };
 const uout = u => ({ ut: utok(u.cccd), cccd: u.cccd, name: u.name, unit: u.unit });
 const uauth = async b => {
@@ -145,14 +151,14 @@ async function mexF(u) {
   const now = Date.now();
   const [ex, at] = await Promise.all([
     q("SELECT id,name,mode,dur,cnt,status,en,sm,ra,rb,sids,t1,t2,gm,maxa,rules,(SELECT COUNT(*) FROM questions WHERE eid=exams.id) qn FROM exams WHERE (mode='free' AND status='open' AND (t1 IS NULL OR t1<=?) AND (t2 IS NULL OR t2>=?)) OR (mode='live' AND (status='waiting' OR (status='running' AND en>?))) OR id IN (SELECT eid FROM attempts WHERE cccd=?) ORDER BY id DESC", [now, now, now, u.cccd]),
-    q('SELECT eid,done,score,ok,rc,tt,n,st,sub FROM attempts WHERE cccd=? ORDER BY n', [u.cccd])
+    q('SELECT eid,done,score,ok,rc,tt,n,st,sub,(qids IS NULL) wq FROM attempts WHERE cccd=? ORDER BY n', [u.cccd])
   ]);
   const by = {}; for (const a of at) (by[a.eid] ||= []).push(a);
   return ex.map(e => {
     const m = e.sm || 'random', qn = e.qn, A = by[e.id] || [], last = A[A.length - 1], dn = A.filter(a => a.done), mx = maxA(e), open = isOpen(e, now);
     const nq = m === 'papers' ? e.cnt : m === 'range' ? Math.max(0, Math.min(+e.rb || qn, qn) - (+e.ra || 1) + 1) : m === 'manual' ? j(e.sids, []).length : Math.min(e.cnt, qn);
     const best = dn.slice().sort(cmp)[0], ui = !last ? 'none' : last.done ? 'done' : 'doing';
-    return { id: e.id, name: e.name, mode: e.mode, dur: e.dur, status: e.status, nq, st: ui, gm: e.gm === 'rank' ? 'rank' : 'pass', mx, na: dn.length, open, again: ui === 'done' && open && dn.length < mx, rules: e.rules || '', ok: dn.some(a => a.ok) ? 1 : 0, rc: best ? best.rc : null, tt: best ? best.tt : null, score: best ? best.score : null };
+    return { id: e.id, name: e.name, mode: e.mode, dur: e.dur, status: e.status, nq, st: ui, wt: ui === 'doing' && !!last.wq, gm: e.gm === 'rank' ? 'rank' : 'pass', mx, na: dn.length, open, again: ui === 'done' && open && dn.length < mx, rules: e.rules || '', ok: dn.some(a => a.ok) ? 1 : 0, rc: best ? best.rc : null, tt: best ? best.tt : null, score: best ? best.score : null };
   });
 }
 async function myresF(u) {
@@ -181,6 +187,30 @@ const H = {
     const h = await cfg('adm');
     if (h && String(b.u || '').trim() === (await cfg('admu')) && checkPw(String(b.p || ''), h)) { await cset('f:adm', '0,0'); return { token: await adminTok() }; }
     await fail('adm'); throw E('Sai tên đăng nhập hoặc mật khẩu');
+  },
+  async subget() { return { u: (await cfg('subu')) || null }; },
+  async subset(b) {   // chỉ quản trị viên chính
+    const u = String(b.u || '').trim().slice(0, 40), p = String(b.p || ''), cur = await cfg('subu');
+    if (u.length < 3) throw E('Tên đăng nhập tối thiểu 3 ký tự');
+    if (/^\d{6,20}$/.test(u)) throw E('Tên đăng nhập không được là dãy số giống số CCCD');
+    if (u === (await cfg('admu'))) throw E('Trùng tên đăng nhập quản trị chính');
+    if (!cur && p.length < 6) throw E('Mật khẩu tối thiểu 6 ký tự');
+    if (p && p.length < 6) throw E('Mật khẩu tối thiểu 6 ký tự');
+    await cset('subu', u); if (p) await cset('subpw', hashPw(p));
+    return { ok: 1 };
+  },
+  async subdel() { await cset('subu', ''); await cset('subpw', ''); return { ok: 1 }; },
+  async xreset(b) {   // đặt lại cuộc thi: xóa toàn bộ bài làm, đưa kỳ thi về trạng thái ban đầu
+    const e = await getExam(b.id);
+    await q('DELETE FROM attempts WHERE eid=?', [e.id]);
+    if (e.mode === 'live') await q("UPDATE exams SET status='waiting',st=NULL,en=NULL WHERE id=?", [e.id]);
+    return { ok: 1 };
+  },
+  async rdel(b) {     // xóa kết quả tùy chọn
+    const ids = (Array.isArray(b.ids) ? b.ids : []).map(String).slice(0, 500);
+    if (!ids.length) return { n: 0 };
+    const r = await db.execute({ sql: 'DELETE FROM attempts WHERE id IN (' + ids.map(() => '?').join(',') + ')', args: ids });
+    return { n: r.rowsAffected };
   },
   async chpw(b) {
     await locked('adm');
@@ -214,6 +244,11 @@ const H = {
       const h = await cfg('adm');
       if (h && checkPw(p, h)) { await cset('f:adm', '0,0'); return { role: 'admin', token: await adminTok() }; }
       await fail('adm');
+    } else if (id && id === (await cfg('subu'))) {
+      await locked('sub');
+      const h = await cfg('subpw');
+      if (h && checkPw(p, h)) { await cset('f:sub', '0,0'); return { role: 'sub', token: await subTok() }; }
+      await fail('sub');
     } else await new Promise(x => setTimeout(x, 500));
     throw E('Sai tài khoản hoặc mật khẩu');
   },
@@ -473,7 +508,8 @@ const H = {
     return rows.map(r => ({ ...r, gm: r.gm === 'rank' ? 'rank' : 'pass', n: r.n || 1, rk: r.gm === 'rank' ? (rm[r.eid].rk.get(r.id) ?? null) : null }));
   }
 };
-const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'newsset', 'stats', 'act', 'edup', 'pgen', 'pl', 'pd', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud']);
+const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'newsset', 'stats', 'act', 'edup', 'pgen', 'pl', 'pd', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud', 'subget', 'subset', 'subdel', 'xreset', 'rdel']);
+const MAIN = new Set(['chpw', 'themeset', 'subget', 'subset', 'subdel', 'xreset', 'rdel']);   // tài khoản phụ không được dùng
 
 module.exports = async (req, res) => {
   try {
@@ -481,7 +517,11 @@ module.exports = async (req, res) => {
     await init();
     const b = req.body || {}, f = H[b.a];
     if (!f) return res.status(400).json({ e: 'Yêu cầu không hợp lệ' });
-    if (ADM.has(b.a) && !(await isAdmin(req))) return res.status(401).json({ e: 'Cần đăng nhập quản trị' });
+    if (ADM.has(b.a)) {
+      const rl = await role(req);
+      if (!rl) return res.status(401).json({ e: 'Cần đăng nhập quản trị' });
+      if (MAIN.has(b.a) && rl !== 'admin') return res.status(403).json({ e: 'Chức năng này chỉ dành cho quản trị viên chính' });
+    }
     res.status(200).json(await f(b));
   } catch (e) {
     console.error(e);
