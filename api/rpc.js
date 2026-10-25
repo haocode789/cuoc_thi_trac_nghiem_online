@@ -11,6 +11,7 @@ const q = async (sql, args = []) => (await db.execute({ sql, args })).rows.map(r
 const j = (s, d) => { try { return JSON.parse(s) ?? d } catch (e) { return d } };
 
 const SCHEMA = 4;
+const IMGK = ['logo', 'hero', 'banner'];
 const HOT = new Set(['adm', 'admu', 'secret']);   // cấu hình ít đổi: giữ trong bộ nhớ, không hỏi DB mỗi request
 const CC = new Map();
 const cfg = async k => {
@@ -199,6 +200,23 @@ const H = {
     await q('INSERT INTO users(cccd,name,unit,phone,pw,created) VALUES(?,?,?,?,?,?)', [cccd, name, unit, phone, hashPw(p), Date.now()]);
     return uout({ cccd, name, unit });
   },
+  async signin(b) {   // một cổng đăng nhập chung: thí sinh (CCCD) hoặc quản trị viên
+    const id = String(b.u || '').trim().slice(0, 60), p = String(b.p || '');
+    if (!id || !p) throw E('Vui lòng nhập tài khoản và mật khẩu');
+    const u = /^\d{6,20}$/.test(id) ? (await q('SELECT * FROM users WHERE cccd=?', [id]))[0] : null;
+    if (u) {
+      const k = 'u' + id; await locked(k);
+      if (!checkPw(p, u.pw)) { await fail(k); throw E('Sai tài khoản hoặc mật khẩu'); }
+      await cset('f:' + k, '0,0'); return { role: 'user', ...uout(u) };
+    }
+    if (id === (await cfg('admu'))) {
+      await locked('adm');
+      const h = await cfg('adm');
+      if (h && checkPw(p, h)) { await cset('f:adm', '0,0'); return { role: 'admin', token: await adminTok() }; }
+      await fail('adm');
+    } else await new Promise(x => setTimeout(x, 500));
+    throw E('Sai tài khoản hoặc mật khẩu');
+  },
   async ulogin(b) {
     const c = String(b.cccd || '').trim(), k = 'u' + c; await locked(k);
     const u = (await q('SELECT * FROM users WHERE cccd=?', [c]))[0];
@@ -207,14 +225,27 @@ const H = {
   },
   async theme(b) {
     const v = (await cfg('thv')) || '0';
-    if (b && b.v && String(b.v) === v) return { same: 1, v };   // máy khách đã có bản mới nhất: không gửi lại ảnh base64
-    return { v, t: j(await cfg('theme'), {}) };
+    if (b && b.v && String(b.v) === v) return { same: 1, v };   // máy khách đã có bản mới nhất
+    const [t, ...im] = await Promise.all([cfg('theme'), ...IMGK.map(k => cfg('timg:' + k))]);
+    const o = j(t, {}); IMGK.forEach((k, i) => { if (im[i]) o[k] = im[i]; });
+    return { v, t: o };
   },
-  async themeset(b) {
-    const x = JSON.stringify(b.t && typeof b.t === 'object' ? b.t : {});
-    if (x.length > 2500000) throw E('Ảnh quá lớn, hãy chọn ảnh nhỏ hơn');
-    const v = String(Date.now());
-    await cset('theme', x); await cset('thv', v); return { ok: 1, v };
+  async themeset(b) {   // phần chữ/màu nhỏ lưu riêng; ảnh chỉ ghi khi có thay đổi → lưu rất nhanh
+    const t = { ...(b.t && typeof b.t === 'object' ? b.t : {}) }, im = { ...(b.img && typeof b.img === 'object' ? b.img : {}) };
+    if (!b.reset) {
+      const old = j(await cfg('theme'), {});   // di chuyển ảnh cũ (lưu chung) sang khóa riêng
+      for (const k of IMGK) if (old[k] && im[k] === undefined) im[k] = old[k];
+    }
+    for (const k of IMGK) { if (typeof t[k] === 'string' && t[k] && im[k] === undefined) im[k] = t[k]; delete t[k]; }
+    const x = JSON.stringify(t);
+    if (x.length > 300000) throw E('Nội dung quá dài');
+    const w = [cset('theme', x)];
+    for (const k of IMGK) {
+      if (b.reset || im[k] === '') w.push(cset('timg:' + k, ''));
+      else if (typeof im[k] === 'string') { if (im[k].length > 1500000) throw E('Ảnh quá lớn, hãy chọn ảnh nhỏ hơn'); w.push(cset('timg:' + k, im[k])); }
+    }
+    const v = String(Date.now()); w.push(cset('thv', v));
+    await Promise.all(w); return { ok: 1, v };
   },
   async mex(b) { return mexF(await uauth(b)); },
   async pre(b) {   // nạp trước mọi mục của thí sinh bằng 1 request
@@ -312,9 +343,10 @@ const H = {
   async qs(b) {
     const o = JSON.stringify((b.o || []).slice(0, 4).map(String));
     if (!b.q || (b.o || []).length < 2) throw E('Thiếu nội dung câu hỏi hoặc đáp án');
-    if (!(+b.a >= 0 && +b.a < Math.min(4, b.o.length))) throw E('Chưa chọn đáp án đúng hợp lệ');
-    if (b.id) await q('UPDATE questions SET q=?,o=?,a=?,subj=?,lvl=? WHERE id=?', [b.q, o, +b.a, b.subj, b.lvl, b.id]);
-    else { await getExam(b.eid); await q('INSERT INTO questions(q,o,a,subj,lvl,eid) VALUES(?,?,?,?,?,?)', [b.q, o, +b.a, b.subj, b.lvl, +b.eid]); }
+    const ai = b.ai ?? b.a;   // đáp án đúng (client gửi ở khóa 'ai' để không trùng khóa 'a' = tên hành động)
+    if (!(+ai >= 0 && +ai < Math.min(4, b.o.length))) throw E('Chưa chọn đáp án đúng hợp lệ');
+    if (b.id) await q('UPDATE questions SET q=?,o=?,a=?,subj=?,lvl=? WHERE id=?', [b.q, o, +ai, b.subj, b.lvl, b.id]);
+    else { await getExam(b.eid); await q('INSERT INTO questions(q,o,a,subj,lvl,eid) VALUES(?,?,?,?,?,?)', [b.q, o, +ai, b.subj, b.lvl, +b.eid]); }
     return { ok: 1 };
   },
   async qd(b) { const x = (await q('SELECT eid FROM questions WHERE id=?', [b.id]))[0]; await busy(x && x.eid); await q('DELETE FROM questions WHERE id=?', [b.id]); if (x && x.eid) await dropPapers(x.eid); return { ok: 1 }; },
