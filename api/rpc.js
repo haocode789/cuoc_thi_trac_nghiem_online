@@ -10,7 +10,7 @@ const E = m => Object.assign(new Error(m), { user: true });
 const q = async (sql, args = []) => (await db.execute({ sql, args })).rows.map(r => ({ ...r }));
 const j = (s, d) => { try { return JSON.parse(s) ?? d } catch (e) { return d } };
 
-const SCHEMA = 4;
+const SCHEMA = 5;
 const IMGK = ['logo', 'hero', 'banner'];
 const HOT = new Set(['adm', 'admu', 'secret']);   // cấu hình ít đổi: giữ trong bộ nhớ, không hỏi DB mỗi request
 const CC = new Map();
@@ -39,7 +39,7 @@ const MIG = [
   'ALTER TABLE attempts ADD COLUMN st INTEGER', 'ALTER TABLE attempts ADD COLUMN rc INTEGER', 'ALTER TABLE attempts ADD COLUMN tt INTEGER', 'ALTER TABLE attempts ADD COLUMN pid INTEGER',
   'ALTER TABLE exams ADD COLUMN pass INTEGER', 'ALTER TABLE exams ADD COLUMN cr INTEGER', 'ALTER TABLE exams ADD COLUMN up INTEGER',
   // v4: chế độ thi, số lần tham gia, quy chế thi
-  'ALTER TABLE exams ADD COLUMN gm TEXT', 'ALTER TABLE exams ADD COLUMN maxa INTEGER', 'ALTER TABLE exams ADD COLUMN rules TEXT',
+  'ALTER TABLE exams ADD COLUMN gm TEXT', 'ALTER TABLE exams ADD COLUMN maxa INTEGER', 'ALTER TABLE exams ADD COLUMN rules TEXT', 'ALTER TABLE exams ADD COLUMN sr INTEGER',
   'ALTER TABLE attempts ADD COLUMN n INTEGER DEFAULT 1', 'UPDATE attempts SET n=1 WHERE n IS NULL',
   'CREATE UNIQUE INDEX IF NOT EXISTS ux_att3 ON attempts(eid,cccd,n)',
   'CREATE INDEX IF NOT EXISTS ix_q ON questions(eid)', 'CREATE INDEX IF NOT EXISTS ix_a_c ON attempts(cccd)', 'CREATE INDEX IF NOT EXISTS ix_a_e ON attempts(eid)', 'CREATE INDEX IF NOT EXISTS ix_p ON papers(eid)',
@@ -157,12 +157,12 @@ async function mexF(u) {
 }
 async function myresF(u) {
   await sweep();
-  const rows = await q('SELECT a.id,a.eid,a.qids,a.done,a.score,a.ok,a.sub,a.st,a.rc,a.tt,a.n,e.name exam,e.gm,e.pass FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.cccd=? ORDER BY a.rowid DESC', [u.cccd]);
-  const ids = [...new Set(rows.filter(r => r.done && r.gm === 'rank').map(r => r.eid))];
+  const rows = await q('SELECT a.id,a.eid,a.qids,a.done,a.score,a.ok,a.sub,a.st,a.rc,a.tt,a.n,e.name exam,e.gm,e.pass,e.sr FROM attempts a JOIN exams e ON e.id=a.eid WHERE a.cccd=? ORDER BY a.rowid DESC', [u.cccd]);
+  const ids = [...new Set(rows.filter(r => r.done && r.gm === 'rank' && r.sr !== 0).map(r => r.eid))];
   const rm = Object.fromEntries(await Promise.all(ids.map(async eid => [eid, await ranksFor(eid)])));
   return rows.map(r => {
-    const total = r.tt ?? j(r.qids, []).length, rk = r.done && r.gm === 'rank' ? (rm[r.eid].rk.get(r.id) ?? null) : null;
-    return { exam: r.exam, n: r.n || 1, gm: r.gm === 'rank' ? 'rank' : 'pass', done: r.done, score: r.score, ok: r.ok, sub: r.sub, total, wait: !r.qids, right: r.done ? (r.rc ?? Math.round((r.score || 0) * total / 100)) : 0, dur: r.done && dur(r) < 9e15 ? dur(r) : null, rk, rt: rk ? rm[r.eid].total : null, pass: r.pass ?? PASS };
+    const total = r.tt ?? j(r.qids, []).length, rk = r.done && r.gm === 'rank' && r.sr !== 0 ? (rm[r.eid].rk.get(r.id) ?? null) : null, pm = r.gm !== 'rank';
+    return { exam: r.exam, n: r.n || 1, gm: r.gm === 'rank' ? 'rank' : 'pass', done: r.done, score: r.score, ok: r.ok, sub: r.sub, total, wait: !r.qids, right: pm ? null : r.done ? (r.rc ?? Math.round((r.score || 0) * total / 100)) : 0, sr: r.sr === 0 ? 0 : 1, dur: !pm && r.done && dur(r) < 9e15 ? dur(r) : null, rk, rt: rk ? rm[r.eid].total : null, pass: r.pass ?? PASS };
   });
 }
 
@@ -305,10 +305,10 @@ const H = {
     let a = await mine(b); const e = await getExam(a.eid), now = Date.now();
     const res = async x => {
       x = (await q('SELECT * FROM attempts WHERE id=?', [x.id]))[0] || x;
-      const gm = e.gm === 'rank' ? 'rank' : 'pass', mx = maxA(e);
-      const [nr, R] = await Promise.all([q('SELECT COUNT(*) c FROM attempts WHERE eid=? AND cccd=? AND done=1', [e.id, a.cccd]), gm === 'rank' ? ranksFor(e.id) : null]);
+      const gm = e.gm === 'rank' ? 'rank' : 'pass', mx = maxA(e), sr = e.sr === 0 ? 0 : 1;
+      const [nr, R] = await Promise.all([q('SELECT COUNT(*) c FROM attempts WHERE eid=? AND cccd=? AND done=1', [e.id, a.cccd]), gm === 'rank' && sr ? ranksFor(e.id) : null]);
       const na = nr[0].c, d = dur(x);
-      return { s: 'done', score: x.score, ok: x.ok, exam: e.name, eid: e.id, gm, n: x.n || 1, na, mx, again: isOpen(e, Date.now()) && na < mx, pass: e.pass ?? PASS, rc: x.rc, tt: x.tt, dur: d < 9e15 ? d : null, rk: R ? (R.byC.get(a.cccd) ?? null) : null, rt: R ? R.total : null };
+      return { s: 'done', score: x.score, ok: x.ok, exam: e.name, eid: e.id, gm, n: x.n || 1, na, mx, again: isOpen(e, Date.now()) && na < mx, pass: e.pass ?? PASS, sr, rc: gm === 'rank' ? x.rc : null, tt: gm === 'rank' ? x.tt : null, dur: gm === 'rank' && d < 9e15 ? d : null, rk: R ? (R.byC.get(a.cccd) ?? null) : null, rt: R ? R.total : null };
     };
     if (a.done) return res(a);
     if (e.mode === 'live') {
@@ -369,13 +369,14 @@ const H = {
     const gm = b.gm === 'rank' || b.gm === 'pass' ? b.gm : (old ? (old.gm === 'rank' ? 'rank' : 'pass') : 'pass');
     const maxa = b.maxa === undefined || b.maxa === null || b.maxa === '' ? (old ? maxA(old) : 1) : Math.min(99, Math.max(1, Math.floor(+b.maxa) || 1));
     const rules = b.rules === undefined || b.rules === null ? (old ? old.rules || '' : '') : String(b.rules).slice(0, 8000);
+    const sr = b.sr === undefined || b.sr === null || b.sr === '' ? (old ? (old.sr === 0 ? 0 : 1) : 1) : (String(b.sr) === '0' ? 0 : 1);
     if (old) {
-      await q('UPDATE exams SET name=?,dur=?,cnt=?,t1=?,t2=?,pass=?,gm=?,maxa=?,rules=?,up=? WHERE id=?', [b.name, dur, cnt, t1, t2, pass, gm, maxa, rules, Date.now(), old.id]);
+      await q('UPDATE exams SET name=?,dur=?,cnt=?,t1=?,t2=?,pass=?,gm=?,maxa=?,rules=?,sr=?,up=? WHERE id=?', [b.name, dur, cnt, t1, t2, pass, gm, maxa, rules, sr, Date.now(), old.id]);
       await q('UPDATE attempts SET ok=(CASE WHEN score>=? THEN 1 ELSE 0 END) WHERE eid=? AND done=1', [pass, old.id]);
       return { ok: 1, id: old.id };
     }
     const live = b.mode === 'live';
-    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,pass,cr,up,gm,maxa,rules) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)', args: [b.name, live ? 'live' : 'free', dur, cnt, t1, t2, live ? 'waiting' : 'open', 'random', pass, Date.now(), Date.now(), gm, maxa, rules] });
+    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,pass,cr,up,gm,maxa,rules,sr) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', args: [b.name, live ? 'live' : 'free', dur, cnt, t1, t2, live ? 'waiting' : 'open', 'random', pass, Date.now(), Date.now(), gm, maxa, rules, sr] });
     return { ok: 1, id: Number(r.lastInsertRowid) };
   },
   async pgen(b) {
@@ -414,7 +415,7 @@ const H = {
   },
   async edup(b) {
     const e = await getExam(b.id), now = Date.now(), live = e.mode === 'live';
-    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,ra,rb,pass,cr,up,gm,maxa,rules) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', args: [e.name + ' (bản sao)', e.mode, e.dur, e.cnt, e.t1, e.t2, live ? 'waiting' : 'open', e.sm === 'papers' ? 'random' : (e.sm || 'random'), e.ra ?? null, e.rb ?? null, e.pass ?? PASS, now, now, e.gm === 'rank' ? 'rank' : 'pass', maxA(e), e.rules || ''] });
+    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,ra,rb,pass,cr,up,gm,maxa,rules,sr) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', args: [e.name + ' (bản sao)', e.mode, e.dur, e.cnt, e.t1, e.t2, live ? 'waiting' : 'open', e.sm === 'papers' ? 'random' : (e.sm || 'random'), e.ra ?? null, e.rb ?? null, e.pass ?? PASS, now, now, e.gm === 'rank' ? 'rank' : 'pass', maxA(e), e.rules || '', e.sr === 0 ? 0 : 1] });
     const nid = Number(r.lastInsertRowid), old = (await q('SELECT id FROM questions WHERE eid=? ORDER BY id', [e.id])).map(x => x.id);
     if (old.length) {
       await db.execute({ sql: 'INSERT INTO questions(q,o,a,subj,lvl,eid) SELECT q,o,a,subj,lvl,? FROM questions WHERE eid=? ORDER BY id', args: [nid, e.id] });
