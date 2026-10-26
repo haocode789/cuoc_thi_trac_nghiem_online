@@ -10,8 +10,8 @@ const E = m => Object.assign(new Error(m), { user: true });
 const q = async (sql, args = []) => (await db.execute({ sql, args })).rows.map(r => ({ ...r }));
 const j = (s, d) => { try { return JSON.parse(s) ?? d } catch (e) { return d } };
 
-const SCHEMA = 5;
-const IMGK = ['logo', 'hero', 'banner'];
+const SCHEMA = 6;
+const IMGK = ['logo', 'hero', 'banner', 'menubg'];
 const HOT = new Set(['adm', 'admu', 'secret', 'subu', 'subpw']);   // cấu hình ít đổi: giữ trong bộ nhớ, không hỏi DB mỗi request
 const CC = new Map();
 const cfg = async k => {
@@ -39,7 +39,7 @@ const MIG = [
   'ALTER TABLE attempts ADD COLUMN st INTEGER', 'ALTER TABLE attempts ADD COLUMN rc INTEGER', 'ALTER TABLE attempts ADD COLUMN tt INTEGER', 'ALTER TABLE attempts ADD COLUMN pid INTEGER',
   'ALTER TABLE exams ADD COLUMN pass INTEGER', 'ALTER TABLE exams ADD COLUMN cr INTEGER', 'ALTER TABLE exams ADD COLUMN up INTEGER',
   // v4: chế độ thi, số lần tham gia, quy chế thi
-  'ALTER TABLE exams ADD COLUMN gm TEXT', 'ALTER TABLE exams ADD COLUMN maxa INTEGER', 'ALTER TABLE exams ADD COLUMN rules TEXT', 'ALTER TABLE exams ADD COLUMN sr INTEGER',
+  'ALTER TABLE exams ADD COLUMN ow TEXT', 'ALTER TABLE exams ADD COLUMN gm TEXT', 'ALTER TABLE exams ADD COLUMN maxa INTEGER', 'ALTER TABLE exams ADD COLUMN rules TEXT', 'ALTER TABLE exams ADD COLUMN sr INTEGER',
   'ALTER TABLE attempts ADD COLUMN n INTEGER DEFAULT 1', 'UPDATE attempts SET n=1 WHERE n IS NULL',
   'CREATE UNIQUE INDEX IF NOT EXISTS ux_att3 ON attempts(eid,cccd,n)',
   'CREATE INDEX IF NOT EXISTS ix_q ON questions(eid)', 'CREATE INDEX IF NOT EXISTS ix_a_c ON attempts(cccd)', 'CREATE INDEX IF NOT EXISTS ix_a_e ON attempts(eid)', 'CREATE INDEX IF NOT EXISTS ix_p ON papers(eid)',
@@ -411,7 +411,7 @@ const H = {
       return { ok: 1, id: old.id };
     }
     const live = b.mode === 'live';
-    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,pass,cr,up,gm,maxa,rules,sr) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', args: [b.name, live ? 'live' : 'free', dur, cnt, t1, t2, live ? 'waiting' : 'open', 'random', pass, Date.now(), Date.now(), gm, maxa, rules, sr] });
+    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,pass,cr,up,gm,maxa,rules,sr,ow) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', args: [b.name, live ? 'live' : 'free', dur, cnt, t1, t2, live ? 'waiting' : 'open', 'random', pass, Date.now(), Date.now(), gm, maxa, rules, sr, b._rl === 'sub' ? 'sub' : 'admin'] });
     return { ok: 1, id: Number(r.lastInsertRowid) };
   },
   async pgen(b) {
@@ -450,7 +450,7 @@ const H = {
   },
   async edup(b) {
     const e = await getExam(b.id), now = Date.now(), live = e.mode === 'live';
-    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,ra,rb,pass,cr,up,gm,maxa,rules,sr) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', args: [e.name + ' (bản sao)', e.mode, e.dur, e.cnt, e.t1, e.t2, live ? 'waiting' : 'open', e.sm === 'papers' ? 'random' : (e.sm || 'random'), e.ra ?? null, e.rb ?? null, e.pass ?? PASS, now, now, e.gm === 'rank' ? 'rank' : 'pass', maxA(e), e.rules || '', e.sr === 0 ? 0 : 1] });
+    const r = await db.execute({ sql: 'INSERT INTO exams(name,mode,dur,cnt,t1,t2,status,sm,ra,rb,pass,cr,up,gm,maxa,rules,sr,ow) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', args: [e.name + ' (bản sao)', e.mode, e.dur, e.cnt, e.t1, e.t2, live ? 'waiting' : 'open', e.sm === 'papers' ? 'random' : (e.sm || 'random'), e.ra ?? null, e.rb ?? null, e.pass ?? PASS, now, now, e.gm === 'rank' ? 'rank' : 'pass', maxA(e), e.rules || '', e.sr === 0 ? 0 : 1, b._rl === 'sub' ? 'sub' : 'admin'] });
     const nid = Number(r.lastInsertRowid), old = (await q('SELECT id FROM questions WHERE eid=? ORDER BY id', [e.id])).map(x => x.id);
     if (old.length) {
       await db.execute({ sql: 'INSERT INTO questions(q,o,a,subj,lvl,eid) SELECT q,o,a,subj,lvl,? FROM questions WHERE eid=? ORDER BY id', args: [nid, e.id] });
@@ -511,6 +511,21 @@ const H = {
 const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'newsset', 'stats', 'act', 'edup', 'pgen', 'pl', 'pd', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud', 'subget', 'subset', 'subdel', 'xreset', 'rdel']);
 const MAIN = new Set(['chpw', 'themeset', 'subget', 'subset', 'subdel', 'xreset', 'rdel']);   // tài khoản phụ không được dùng
 
+
+// Tài khoản quản trị phụ chỉ được chỉnh sửa kỳ thi do chính tài khoản phụ tạo (cột exams.ow = 'sub').
+const qEid = async id => { const x = (await q('SELECT eid FROM questions WHERE id=?', [id]))[0]; return x ? x.eid : null; };
+const OWN = {   // hành động chỉnh sửa → cách lấy mã kỳ thi bị tác động (null = tạo mới, không cần kiểm tra)
+  es: b => b.id || null, ed: b => b.id, start: b => b.id, end: b => b.id, ext: b => b.id, edup: null,
+  esel: b => b.id, pgen: b => b.id, qi: b => b.eid, qda: b => b.eid, qcp: b => b.eid,
+  qs: async b => b.id ? qEid(b.id) : b.eid, qd: async b => qEid(b.id)
+};
+const ownGuard = async b => {
+  const f = OWN[b.a]; if (!f) return;
+  const eid = await f(b); if (eid === null && b.a === 'es') return;
+  const e = eid ? (await q('SELECT ow FROM exams WHERE id=?', [+eid]))[0] : null;
+  if (!e || e.ow !== 'sub') throw Object.assign(new Error('Tài khoản quản trị phụ chỉ được chỉnh sửa kỳ thi do chính tài khoản mình tạo'), { forbid: true });
+};
+
 module.exports = async (req, res) => {
   try {
     if (req.method !== 'POST') return res.status(405).json({ e: 'Method not allowed' });
@@ -521,10 +536,12 @@ module.exports = async (req, res) => {
       const rl = await role(req);
       if (!rl) return res.status(401).json({ e: 'Cần đăng nhập quản trị' });
       if (MAIN.has(b.a) && rl !== 'admin') return res.status(403).json({ e: 'Chức năng này chỉ dành cho quản trị viên chính' });
+      if (rl === 'sub') await ownGuard(b);
+      b._rl = rl;
     }
     res.status(200).json(await f(b));
   } catch (e) {
     console.error(e);
-    res.status(e.user ? 400 : 500).json({ e: e.user ? e.message : 'Lỗi máy chủ' });
+    res.status(e.forbid ? 403 : e.user ? 400 : 500).json({ e: e.user || e.forbid ? e.message : 'Lỗi máy chủ' });
   }
 };
