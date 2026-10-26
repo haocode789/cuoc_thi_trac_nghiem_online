@@ -168,7 +168,7 @@ async function myresF(u) {
   const rm = Object.fromEntries(await Promise.all(ids.map(async eid => [eid, await ranksFor(eid)])));
   return rows.map(r => {
     const total = r.tt ?? j(r.qids, []).length, rk = r.done && r.gm === 'rank' && r.sr !== 0 ? (rm[r.eid].rk.get(r.id) ?? null) : null, pm = r.gm !== 'rank';
-    return { exam: r.exam, n: r.n || 1, gm: r.gm === 'rank' ? 'rank' : 'pass', done: r.done, score: r.score, ok: r.ok, sub: r.sub, total, wait: !r.qids, right: pm ? null : r.done ? (r.rc ?? Math.round((r.score || 0) * total / 100)) : 0, sr: r.sr === 0 ? 0 : 1, dur: !pm && r.done && dur(r) < 9e15 ? dur(r) : null, rk, rt: rk ? rm[r.eid].total : null, pass: r.pass ?? PASS };
+    return { exam: r.exam, n: r.n || 1, gm: r.gm === 'rank' ? 'rank' : 'pass', done: r.done, score: r.score, ok: r.ok, sub: r.sub, total, wait: !r.qids, right: r.done ? (r.rc ?? Math.round((r.score || 0) * total / 100)) : 0, sr: r.sr === 0 ? 0 : 1, dur: r.done && dur(r) < 9e15 ? dur(r) : null, rk, rt: rk ? rm[r.eid].total : null, pass: r.pass ?? PASS };
   });
 }
 
@@ -343,7 +343,7 @@ const H = {
       const gm = e.gm === 'rank' ? 'rank' : 'pass', mx = maxA(e), sr = e.sr === 0 ? 0 : 1;
       const [nr, R] = await Promise.all([q('SELECT COUNT(*) c FROM attempts WHERE eid=? AND cccd=? AND done=1', [e.id, a.cccd]), gm === 'rank' && sr ? ranksFor(e.id) : null]);
       const na = nr[0].c, d = dur(x);
-      return { s: 'done', score: x.score, ok: x.ok, exam: e.name, eid: e.id, gm, n: x.n || 1, na, mx, again: isOpen(e, Date.now()) && na < mx, pass: e.pass ?? PASS, sr, rc: gm === 'rank' ? x.rc : null, tt: gm === 'rank' ? x.tt : null, dur: gm === 'rank' && d < 9e15 ? d : null, rk: R ? (R.byC.get(a.cccd) ?? null) : null, rt: R ? R.total : null };
+      return { s: 'done', score: x.score, ok: x.ok, exam: e.name, eid: e.id, gm, n: x.n || 1, na, mx, again: isOpen(e, Date.now()) && na < mx, pass: e.pass ?? PASS, sr, rc: x.rc ?? Math.round((x.score || 0) * (x.tt || 0) / 100), tt: x.tt, dur: d < 9e15 ? d : null, rk: R ? (R.byC.get(a.cccd) ?? null) : null, rt: R ? R.total : null };
     };
     if (a.done) return res(a);
     if (e.mode === 'live') {
@@ -471,7 +471,7 @@ const H = {
     const e = await getExam(b.id), now = Date.now();
     if (e.mode === 'live' && !(await pickFor(e)).length) throw E('Kỳ thi chưa có câu hỏi, hãy thêm câu hỏi trước khi bắt đầu');
     if (e.mode === 'live') await q("UPDATE exams SET status='running',st=?,en=? WHERE id=?", [now, now + e.dur * 60000, e.id]);
-    else await q("UPDATE exams SET status='open' WHERE id=?", [e.id]);
+    else await q("UPDATE exams SET status='open',t1=?,t2=CASE WHEN t2 IS NOT NULL AND t2<=? THEN NULL ELSE t2 END WHERE id=?", [now, now, e.id]);   // bắt đầu ngay, bỏ qua giờ hẹn mở
     return { ok: 1 };
   },
   async end(b) {
@@ -497,8 +497,8 @@ const H = {
   async mon(b) {
     await sweep();
     const e = await getExam(b.id);
-    const rows = await q('SELECT id,cccd,n,name,unit,phone,qids,ans,done,score,ok FROM attempts WHERE eid=? ORDER BY name,n', [e.id]);
-    return { e, at: rows.map(r => ({ id: r.id, n: r.n || 1, cccd: r.cccd, name: r.name, unit: r.unit, phone: r.phone, total: j(r.qids, []).length, got: Object.keys(j(r.ans, {})).length, done: r.done, score: r.score, ok: r.ok })) };
+    const rows = await q('SELECT id,cccd,n,name,unit,phone,qids,ans,done,score,ok,rc,tt FROM attempts WHERE eid=? ORDER BY name,n', [e.id]);
+    return { e, at: rows.map(r => ({ id: r.id, n: r.n || 1, cccd: r.cccd, name: r.name, unit: r.unit, phone: r.phone, total: j(r.qids, []).length, got: Object.keys(j(r.ans, {})).length, done: r.done, rc: r.rc ?? (r.done ? Math.round((r.score || 0) * j(r.qids, []).length / 100) : null), tt: r.tt ?? j(r.qids, []).length, ok: r.ok })) };
   },
   async res() {
     await sweep();
