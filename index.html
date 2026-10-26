@@ -249,6 +249,8 @@ body.ld2 #busy{transform:translate(-50%,0)}
 .xq h3{font-size:calc(22px*var(--fs,1));margin:16px 0 6px}
 .xq .act{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}.xq .act .btn{min-width:0;width:100%;height:48px;font-size:calc(15px*var(--fs,1))}
 .xqs>div{border-radius:16px}
+.imp-n{border-radius:12px;padding:12px 14px;background:#e3f6ec;color:#0b5c3a;margin:0 0 12px;max-height:36vh;overflow:auto;line-height:1.5}
+.imp-n.w{background:#fff1de;color:#8a4b08}.imp-n ul{margin:8px 0 0 18px;padding:0}.imp-n li{margin-bottom:6px}.imp-n small{opacity:.75}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"></noscript>
 <script>try{if(localStorage.getItem("ttu")||sessionStorage.getItem("ttu")||location.hash==="#admin"){var l=document.createElement("link");l.rel="preload";l.as="image";l.href="/banner.jpg";document.head.appendChild(l)}}catch(e){}</script></head>
@@ -353,25 +355,132 @@ function parseDocx(xml){
   return !!(on(g('w:b'))||on(g('w:u'))||on(g('w:highlight'))||(c&&!['000000','auto',''].includes((c.getAttribute('w:val')||'').toLowerCase()))||(sh&&!['auto','ffffff',''].includes((sh.getAttribute('w:fill')||'').toLowerCase())))};
  const L=[];for(const p of d.getElementsByTagName('w:p')){let t='',fl='';const push=()=>{if(t.trim())L.push({t,fl});t='';fl=''};
   for(const r of p.getElementsByTagName('w:r')){const f=fm(r)?'1':'0';for(const n of r.children){const k=n.localName;if(k==='t'){t+=n.textContent;fl+=f.repeat(n.textContent.length)}else if(k==='br')push();else if(k==='tab'){t+=' ';fl+='0'}}}push()}
- const ST=/^\s*(câu|question)?\s*\d+\s*[.:)]\s*/i,LB=/^\s*\*?\s*([A-Da-d])\s*[.):]\s*/,KEY=/^\s*(đáp án|dap an|answer)\s*[:\-]?\s*([A-Da-d])/i,hasLb=L.some(l=>LB.test(l.t));
+ return parseLines(L)}
+function parseLines(L){
+ L=L.map(l=>({t:l.t.replace(/\u00a0/g,' '),fl:l.fl}));
+ const KEY=/^\s*(đáp án|dap an|answer)\s*[:\-]?\s*([A-Da-d])/i,LB=/^\s*\*?\s*([A-Da-d])\s*[.):]\s*/;
+ const cau=L.filter(l=>/^\s*(câu|question)\s*\d+/i.test(l.t)).length;
+ const ST=cau>=2?/^\s*(câu|question)\s*(\d+)\s*[.:)]?\s*/i:/^\s*()(\d+)\s*[.:)]\s*/;
+ const B=[];let cur=null;
+ for(const l of L){const m=l.t.match(ST);if(m){cur={no:m[2],head:l.t.slice(m[0].length).trim(),body:[]};B.push(cur)}else if(cur)cur.body.push(l)}
+ if(!B.length)return parseLoose(L);
+ const list=[],bad=[];
+ const mk=(l,m)=>{const off=m?m[0].length:0,raw=l.t.slice(off),b=(l.fl.slice(off).match(/1/g)||[]).length+(m&&/^\s*\*/.test(l.t)?1:0);return{t:raw.trim(),b,n:Math.max(1,raw.trim().length)}};
+ for(const b of B){
+  let key=null;const lines=[];
+  for(const l of b.body){const m=l.t.match(KEY);if(m)key='ABCD'.indexOf(m[2].toUpperCase());else lines.push(l)}
+  let q=b.head,opts=[];const lab=lines.map(l=>l.t.match(LB)),fi=lab.findIndex(Boolean),no=b.no;
+  const why=m=>bad.push({no,q:(q||b.head).slice(0,110),why:m});
+  if(fi>=0){
+   const k=Math.min('ABCD'.indexOf(lab[fi][1].toUpperCase()),fi),start=fi-k;
+   for(let i=0;i<start;i++)q+=' '+lines[i].t.trim();
+   for(let i=start;i<lines.length;i++){
+    if(i<fi||(lab[i]&&opts.length<4))opts.push(mk(lines[i],i<fi?null:lab[i]));
+    else if(opts.length){const x=mk(lines[i],null),o=opts[opts.length-1];o.t+=' '+x.t;o.b+=x.b;o.n+=x.n}
+   }
+  }else if(lines.length>=2&&lines.length<=4)opts=lines.map(l=>mk(l,null));
+  else if(lines.length>4){why('Không xác định được các đáp án (nhiều dòng nhưng không có nhãn A, B, C, D)');continue}
+  if(!q){why('Không có nội dung câu hỏi');continue}
+  if(opts.length<2){why('Không tìm thấy đủ đáp án (cần ít nhất 2 đáp án)');continue}
+  let a=key;
+  if(a==null||a<0||a>=opts.length){
+   const hi=opts.map((o,i)=>o.b/o.n>=0.5?i:-1).filter(i=>i>=0);
+   if(hi.length===1)a=hi[0];
+   else if(hi.length===0){const any=opts.map((o,i)=>o.b>0?i:-1).filter(i=>i>=0);
+    if(any.length===1)a=any[0];else{why(any.length?'Có nhiều đáp án được đánh dấu':'Không có đáp án nào được in đậm / tô màu để xác định đáp án đúng');continue}}
+   else{why('Có '+hi.length+' đáp án cùng được in đậm / tô màu ('+hi.map(i=>'ABCD'[i]).join(', ')+') nên không xác định được đáp án đúng');continue}
+  }
+  list.push({q,o:opts.map(o=>o.t),a,no});
+ }
+ return{list,bad,total:B.length}}
+function parseLoose(L){   // file không đánh số câu: dòng không có nhãn là câu hỏi, các dòng có nhãn là đáp án
+ const LB=/^\s*\*?\s*([A-Da-d])\s*[.):]\s*/,KEY=/^\s*(đáp án|dap an|answer)\s*[:\-]?\s*([A-Da-d])/i;
  const Q=[];let c=null;
  for(const l of L){let m;
   if(c&&(m=l.t.match(KEY))){c.key='ABCD'.indexOf(m[2].toUpperCase());continue}
   if(c&&(m=l.t.match(LB))&&c.o.length<4){c.o.push(l.t.slice(m[0].length).trim());c.f.push((l.fl.slice(m[0].length).match(/1/g)||[]).length+(/^\s*\*/.test(l.t)?1:0));continue}
-  if(m=l.t.match(ST)){c={q:l.t.slice(m[0].length).trim(),o:[],f:[]};Q.push(c);continue}
-  if(c&&!hasLb&&c.o.length<4&&c.q){c.o.push(l.t.trim());c.f.push((l.fl.match(/1/g)||[]).length);continue}
-  if(c&&hasLb&&!c.o.length){c.q+=' '+l.t.trim();continue}
+  if(c&&c.o.length<2&&!c.o.length){c.q+=' '+l.t.trim();continue}
   c={q:l.t.trim(),o:[],f:[]};Q.push(c)}
- const list=[];let skip=0;
- for(const c of Q){if(c.o.length<2||!c.q)continue;const n=c.f.filter(x=>x>0).length,i=c.key!=null?c.key:(n===1?c.f.findIndex(x=>x>0):-1);if(i<0||i>=c.o.length){skip++;continue}list.push({q:c.q,o:c.o,a:i})}
- return{list,skip}}
+ const list=[],bad=[];let n=0;
+ for(const c of Q){n++;if(c.o.length<2||!c.q){bad.push({no:n,q:c.q.slice(0,110),why:'Không tìm thấy đủ đáp án'});continue}
+  const k=c.f.filter(x=>x>0).length,i=c.key!=null?c.key:(k===1?c.f.findIndex(x=>x>0):-1);
+  if(i<0||i>=c.o.length){bad.push({no:n,q:c.q.slice(0,110),why:'Không xác định được đáp án đúng (cần in đậm / tô màu đúng 1 đáp án)'});continue}
+  list.push({q:c.q,o:c.o,a:i,no:n})}
+ return{list,bad,total:Q.length}}
+
+/* ===== Đọc tệp Word cũ (.doc, định dạng nhị phân OLE) ngay trên trình duyệt ===== */
+function cfbOpen(buf){
+ const d=new DataView(buf),u=new Uint8Array(buf);
+ if(d.getUint32(0,true)!==0xE011CFD0)throw new Error('Tệp không phải định dạng Word hợp lệ');
+ const ss=1<<d.getUint16(30,true),ms=1<<d.getUint16(32,true),nfat=d.getUint32(44,true),dir0=d.getUint32(48,true),cut=d.getUint32(56,true),mf0=d.getUint32(60,true),dif0=d.getUint32(68,true),ndif=d.getUint32(72,true),END=0xFFFFFFFA;
+ const sec=i=>(i+1)*ss,fs=[];
+ for(let i=0;i<109&&fs.length<nfat;i++)fs.push(d.getUint32(76+i*4,true));
+ let ds=dif0;for(let k=0;k<ndif&&ds<END;k++){const o=sec(ds);for(let i=0;i<ss/4-1&&fs.length<nfat;i++)fs.push(d.getUint32(o+i*4,true));ds=d.getUint32(o+ss-4,true)}
+ const fat=[];for(const s of fs){const o=sec(s);for(let i=0;i<ss/4;i++)fat.push(d.getUint32(o+i*4,true))}
+ const chain=(s,f)=>{const a=[];while(s<END&&a.length<4e6){a.push(s);s=f[s]}return a};
+ const big=(s,size)=>{const a=chain(s,fat),o=new Uint8Array(a.length*ss);a.forEach((x,i)=>o.set(u.subarray(sec(x),sec(x)+ss),i*ss));return size!=null?o.subarray(0,size):o};
+ const db=big(dir0),dv=new DataView(db.buffer,db.byteOffset,db.length),E=[];
+ for(let i=0;i<db.length/128;i++){const o=i*128,nl=dv.getUint16(o+64,true);let nm='';for(let k=0;k<nl/2-1;k++)nm+=String.fromCharCode(dv.getUint16(o+k*2,true));E.push({nm,type:db[o+66],start:dv.getUint32(o+116,true),size:dv.getUint32(o+120,true)})}
+ const mini=big(E[0].start,E[0].size),mfat=[];
+ for(const s of chain(mf0,fat)){const o=sec(s);for(let i=0;i<ss/4;i++)mfat.push(d.getUint32(o+i*4,true))}
+ const small=(s,size)=>{const o=new Uint8Array(Math.ceil(size/ms)*ms);let i=0;while(s<END&&(i+1)*ms<=o.length){o.set(mini.subarray(s*ms,s*ms+ms),i*ms);s=mfat[s];i++}return o.subarray(0,size)};
+ return nm=>{const e=E.find(x=>x.nm===nm&&x.type===2);return e?(e.size<cut?small(e.start,e.size):big(e.start,e.size)):null}}
+function chpxFmt(W,q,cb){   // true nếu chữ được in đậm / gạch chân / tô màu / tô sáng
+ let i=0,f=false;
+ while(i+2<=cb){const op=W[q+i]|(W[q+i+1]<<8),sp=op>>13,p=q+i+2;
+  const sz=[1,1,2,4,2,2,0,3][sp],n=sp===6?1+W[p]:sz;
+  if(op===0x0835&&(W[p]===1||W[p]===0x81))f=true;
+  else if(op===0x2A3E&&W[p]!==0)f=true;
+  else if(op===0x2A42&&W[p]>1)f=true;
+  else if(op===0x2A0C&&W[p]!==0)f=true;
+  else if(op===0x6870&&W[p+3]!==0xFF&&(W[p]||W[p+1]||W[p+2]))f=true;
+  i+=2+n}
+ return f}
+function parseDocBin(buf){
+ const rd=cfbOpen(buf),W=rd('WordDocument');
+ if(!W)throw new Error('Không tìm thấy nội dung Word trong tệp');
+ const dv=new DataView(W.buffer,W.byteOffset,W.length);
+ if(dv.getUint16(0,true)!==0xA5EC)throw new Error('Tệp không phải Word 97-2003 (.doc)');
+ if(dv.getUint16(10,true)&0x100)throw new Error('Tệp .doc đang được mã hóa bằng mật khẩu');
+ const T=rd((dv.getUint16(10,true)&0x200)?'1Table':'0Table');if(!T)throw new Error('Tệp .doc bị lỗi (thiếu bảng dữ liệu)');
+ const tv=new DataView(T.buffer,T.byteOffset,T.length);
+ const ccp=dv.getUint32(0x4C,true),fcClx=dv.getUint32(0x1A2,true),fcB=dv.getUint32(0xFA,true),lcbB=dv.getUint32(0xFE,true);
+ let p=fcClx;while(tv.getUint8(p)===1)p+=3+tv.getUint16(p+1,true);
+ if(tv.getUint8(p)!==2)throw new Error('Không đọc được cấu trúc văn bản của tệp .doc');
+ const lcb=tv.getUint32(p+1,true),pl=p+5,n=((lcb-4)/12)|0,pcs=[];
+ for(let i=0;i<n;i++){const o=pl+(n+1)*4+i*8;let fc=tv.getUint32(o+2,true);const comp=!!(fc&0x40000000);if(comp)fc=((fc&0x3FFFFFFF)/2)|0;pcs.push({a:tv.getUint32(pl+i*4,true),b:tv.getUint32(pl+(i+1)*4,true),fc,comp})}
+ const runs=[],nb=((lcbB-4)/8)|0;
+ for(let i=0;i<nb;i++){const o=tv.getUint32(fcB+(nb+1)*4+i*4,true)*512;if(o+512>W.length)continue;const cr=W[o+511];
+  for(let k=0;k<cr;k++){const b=W[o+(cr+1)*4+k];let f=false;if(b){const q=o+b*2;f=chpxFmt(W,q+1,W[q])}runs.push([dv.getUint32(o+k*4,true),dv.getUint32(o+(k+1)*4,true),f])}}
+ runs.sort((x,y)=>x[0]-y[0]);
+ const fmtAt=off=>{let lo=0,hi=runs.length-1;while(lo<=hi){const m=(lo+hi)>>1,r=runs[m];if(off<r[0])hi=m-1;else if(off>=r[1])lo=m+1;else return r[2]}return false};
+ const C1252={0x80:0x20AC,0x82:0x201A,0x83:0x192,0x84:0x201E,0x85:0x2026,0x86:0x2020,0x87:0x2021,0x88:0x2C6,0x89:0x2030,0x8A:0x160,0x8B:0x2039,0x8C:0x152,0x8E:0x17D,0x91:0x2018,0x92:0x2019,0x93:0x201C,0x94:0x201D,0x95:0x2022,0x96:0x2013,0x97:0x2014,0x98:0x2DC,0x99:0x2122,0x9A:0x161,0x9B:0x203A,0x9C:0x153,0x9E:0x17E,0x9F:0x178};
+ const L=[];let t='',fl='',fst=[];const push=()=>{if(t.trim())L.push({t,fl});t='';fl=''};
+ for(const pc of pcs){const end=Math.min(pc.b,ccp);
+  for(let cp=pc.a;cp<end;cp++){const off=pc.fc+(cp-pc.a)*(pc.comp?1:2);if(off+(pc.comp?1:2)>W.length)break;
+   let ch=pc.comp?W[off]:dv.getUint16(off,true);if(pc.comp&&C1252[ch])ch=C1252[ch];
+   if(ch===0x13){fst.push(1);continue}if(ch===0x14){if(fst.length)fst[fst.length-1]=0;continue}if(ch===0x15){fst.pop();continue}
+   if(fst.includes(1))continue;
+   if(ch===13||ch===7||ch===11||ch===12){push();continue}
+   if(ch===9||ch===0xA0){t+=' ';fl+='0';continue}
+   if(ch<32)continue;
+   t+=String.fromCharCode(ch);fl+=fmtAt(off)?'1':'0'}}
+ push();return L}
+
 function impWord(){
- const inp=document.createElement('input');inp.type='file';inp.accept='.docx';
+ const inp=document.createElement('input');inp.type='file';inp.accept='.docx,.doc';
  inp.onchange=async()=>{const f=inp.files[0];if(!f)return;
-  try{if(!window.JSZip)await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=ok;s.onerror=()=>no(new Error('Không tải được thư viện đọc Word (cần Internet)'));document.head.appendChild(s)});
-   const z=await JSZip.loadAsync(await f.arrayBuffer()),x=await z.file('word/document.xml').async('string'),{list,skip}=parseDocx(x);
-   if(!list.length)throw new Error('Không nhận diện được câu hỏi nào có đáp án in đậm/tô màu');
-   modal(`Nhập từ Word: ${list.length} câu hợp lệ${skip?` (bỏ qua ${skip} câu không rõ đáp án)`:''}`,[{k:'s',l:'Môn học'},{k:'l',l:'Mức độ',t:'sel',o:['Dễ','Trung bình','Khó']},{k:'m',l:'Cách nhập',t:'sel',w:1,o:['Thêm vào kỳ thi này','Thay thế toàn bộ câu hỏi của kỳ thi'],v:['add','rep']}],{s:'Pháp luật',l:'Trung bình',m:'add'},async o=>{const r=await api('qi',{eid:EQ,replace:o.m==='rep',list:list.map(q=>({...q,s:o.s||'Pháp luật',l:o.l}))});toast('Đã nhập '+r.n+' câu hỏi','ok')})
+  try{const buf=await f.arrayBuffer(),h=new Uint8Array(buf.slice(0,8));let r;
+   if(h[0]===0x50&&h[1]===0x4B){
+    if(!window.JSZip)await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=ok;s.onerror=()=>no(new Error('Không tải được thư viện đọc Word (cần Internet)'));document.head.appendChild(s)});
+    const z=await JSZip.loadAsync(buf),fx=z.file('word/document.xml');if(!fx)throw new Error('Tệp không phải Word hợp lệ');r=parseDocx(await fx.async('string'))}
+   else if(h[0]===0xD0&&h[1]===0xCF)r=parseLines(parseDocBin(buf));
+   else if(String.fromCharCode(...h.slice(0,5))==='{\\rtf')throw new Error('Tệp RTF chưa được hỗ trợ, hãy lưu lại thành .docx hoặc .doc');
+   else throw new Error('Tệp không đúng định dạng Word (.doc / .docx)');
+   const{list,bad,total}=r;
+   if(!list.length)throw new Error('Không nhận diện được câu hỏi hợp lệ nào'+(bad[0]?' – Câu '+bad[0].no+': '+bad[0].why:''));
+   const note=`<div class="imp-n ${bad.length?'w':''}"><b>Phát hiện ${total} câu · ${list.length} câu hợp lệ</b>${bad.length?` · <b>${bad.length} câu chưa nhận được</b> (sẽ không được nhập). Hãy sửa trong file Word rồi nhập lại phần còn thiếu:<ul>${bad.slice(0,60).map(x=>`<li><b>Câu ${esc(String(x.no||'?'))}</b> – ${esc(x.why)}<br><small>${esc(x.q)}…</small></li>`).join('')}</ul>${bad.length>60?`<p>… và ${bad.length-60} câu khác</p>`:''}`:' · Đã nhận đủ tất cả các câu.'}</div>`;
+   modal(`Nhập từ Word: ${list.length} câu`,[{k:'s',l:'Môn học'},{k:'l',l:'Mức độ',t:'sel',o:['Dễ','Trung bình','Khó']},{k:'m',l:'Cách nhập',t:'sel',w:1,o:['Thêm vào kỳ thi này','Thay thế toàn bộ câu hỏi của kỳ thi'],v:['add','rep']}],{s:'Pháp luật',l:'Trung bình',m:'add'},async o=>{const r2=await api('qi',{eid:EQ,replace:o.m==='rep',list:list.map(q=>({q:q.q,o:q.o,a:q.a,s:o.s||'Pháp luật',l:o.l}))});toast('Đã nhập '+r2.n+' câu hỏi','ok')},note)
   }catch(e){toast(e.message,'bad')}};inp.click()}
 
 let CK,PEND=0;
@@ -570,7 +679,7 @@ async function dash(){
  const sc=[['exams','Quản lý kỳ thi','Tạo, chỉnh sửa và quản lý các kỳ thi đơn giản, linh hoạt','file','#2563eb'],['res','Kết quả thi','Xem thống kê, tra cứu và xuất báo cáo kết quả thi chi tiết','bars','#16a34a'],['users','Thí sinh','Quản lý danh sách thí sinh, theo dõi lượt tham gia và trạng thái làm bài','users','#7c3aed']];
  P(`<div class="a-sc">${sc.map(x=>`<div class="p-card sc" data-go="${x[0]}"><span class="ti big2" style="background:${x[4]}">${ic(x[3],34)}</span><div style="flex:1"><b>${x[1]}</b><p>${x[2]}</p></div><span class="arr" style="color:${x[4]}">${ic('arr',18)}</span></div>`).join('')}</div>
 <div class="a-g3"><div class="p-card"><div class="p-ch"><span style="color:#16a34a;display:flex">${ic('bars',26)}</span><b>Thống kê</b><select id="sd" class="sm"><option value="7">7 ngày qua</option><option value="14">14 ngày qua</option><option value="30">30 ngày qua</option></select><select id="se" class="sm"><option value="">Tất cả kỳ thi</option>${L.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('')}</select></div><div id="chart" style="min-height:250px"></div></div>
-<div class="p-card"><div class="p-ch"><span style="color:#16a34a;display:flex">${ic('hq',24)}</span><b>Tình trạng các kỳ thi</b><a data-go="exams">Xem tất cả ${ic('arr',14)}</a></div>${L.slice(0,4).map(e=>{const s=lab(e),pc=e.n?Math.round((e.dn||0)*100/e.n):0;return`<div class="a-ex"><span class="ti sm" style="background:#e8f0fe;color:#2563eb">${ic('file',20)}</span><div style="flex:1"><b>${esc(e.name)}</b><div class="a-ex2"><span class="tag ${s[1]}">${s[0]}</span><span>${ic('users',14)} Đăng ký <b>${e.n}</b></span><span>${ic('check',14)} Hoàn thành <b>${e.dn||0}</b></span></div><div class="bar"><i style="width:${pc}%"></i><em>${pc}%</em></div></div></div>`}).join('')||'<p style="color:var(--mut)">Chưa có kỳ thi nào.</p>'}</div>
+<div class="p-card"><div class="p-ch"><span style="color:#16a34a;display:flex">${ic('hq',24)}</span><b>Tình trạng các kỳ thi</b><a data-go="exams">Xem tất cả ${ic('arr',14)}</a></div>${L.slice(0,4).map(e=>{const s=lab(e),pc=e.n?Math.round((e.dn||0)*100/e.n):0;return`<div class="a-ex"><span class="ti sm" style="background:#e8f0fe;color:#2563eb">${ic('file',20)}</span><div style="flex:1"><b>${esc(e.name)}</b><div class="a-ex2"><span class="tag ${s[1]}">${s[0]}</span><span>${ic('users',14)} Lượt vào thi <b>${e.n}</b></span><span>${ic('check',14)} Số lượt thi <b>${e.dn||0}</b></span></div><div class="bar"><i style="width:${pc}%"></i><em>${pc}%</em></div></div></div>`}).join('')||'<p style="color:var(--mut)">Chưa có kỳ thi nào.</p>'}</div>
 <div class="p-card"><div class="p-ch"><span style="color:#16a34a;display:flex">${ic('clock',24)}</span><b>Hoạt động gần đây</b></div><div id="act"><p style="color:var(--mut)">Đang tải...</p></div></div></div>
 <div class="a-g2"><div class="p-card"><div class="p-ch"><span style="color:#16a34a;display:flex">${ic('cal',24)}</span><b>Danh sách kỳ thi</b><a data-go="exams">Xem tất cả ${ic('arr',14)}</a><button class="btn s" id="nw" style="display:inline-flex;gap:6px;align-items:center">${ic('plus',14)} Tạo kỳ thi mới</button></div>${tbl(['#','Tên kỳ thi','Chế độ','Số câu','Lượt thi','Trạng thái','Thao tác'],L.slice(0,5).map((e,i)=>{const s=lab(e);return`<tr><td>${i+1}</td><td><b>${esc(e.name)}</b></td><td>${e.mode==='live'?'Đồng loạt':'Tự do'}</td><td>${nqOf(e)}</td><td>${e.n}</td><td><span class="tag ${s[1]}">${s[0]}</span></td><td><button class="ab" style="--c:#f59e0b" data-q="${e.id}" aria-label="Sửa">${ic('edit',16)}</button></td></tr>`}).join(''))}</div>
 <div class="p-card"><div class="p-ch"><span style="color:#16a34a;display:flex">${ic('gear',24)}</span><b>Thông tin hệ thống</b><span class="tag tg">● Hoạt động ổn định</span></div><div class="a-sys"><div><span class="ti" style="background:#e8f0fe;color:#2563eb">${ic('box',22)}</span><div><small>Phiên bản hệ thống</small><b>${(T('ver').match(/[\d.]+/)||['1.0.0'])[0]}</b><small>Phiên bản hiện tại</small></div></div><div><span class="ti" style="background:#e8f0fe;color:#2563eb">${ic('db',22)}</span><div><small>Cơ sở dữ liệu</small><b style="color:#16a34a">Đang kết nối</b><small>Turso, hoạt động bình thường</small></div></div><div><span class="ti" style="background:#e3f6ec;color:#16a34a">${ic('wifi',22)}</span><div><small>Trạng thái kết nối</small><b style="color:#16a34a">Ổn định</b><small>Kết nối mạng bình thường</small></div></div><div><span class="ti" style="background:#f1e9fd;color:#7c3aed">${ic('users',22)}</span><div><small>Tài khoản thí sinh</small><b>${d.nu}</b><small>${d.att} lượt tham gia thi</small></div></div></div></div></div>`);
@@ -585,9 +694,9 @@ const canEnd=e=>e.mode==='live'?(e.status==='running'&&e.en>Date.now()):e.status
 const dd=v=>v?new Date(v).toLocaleDateString('vi-VN'):'—';
 const nqOf=e=>{const m=e.sm||'random';return m==='papers'?e.cnt:m==='range'?Math.max(0,Math.min(+e.rb||e.qn,e.qn)-(+e.ra||1)+1):m==='manual'?j2(e.sids).length:Math.min(e.cnt,e.qn)};
 async function exams(){
- const L=await api('el'),now=Date.now(),isOpen=e=>e.mode==='live'?(e.status==='waiting'||(e.status==='running'&&e.en>now)):e.status==='open';
+ const [L,D]=await Promise.all([api('el'),api('dash')]),now=Date.now(),isOpen=e=>e.mode==='live'?(e.status==='waiting'||(e.status==='running'&&e.en>now)):e.status==='open';
  const reg=L.reduce((a,e)=>a+e.n,0),dn=L.reduce((a,e)=>a+(e.dn||0),0),nOpen=L.filter(isOpen).length,spk=c=>`<svg class="spk" viewBox="0 0 120 30" preserveAspectRatio="none"><path d="M0 24C20 8 30 28 52 17S88 3 120 8" fill="none" stroke="${c}" stroke-width="2"/></svg>`;
- const SC=[['cal','#3b82f6','Tổng số kỳ thi',L.length],['users','#16a34a','Lượt thí sinh đăng ký',reg],['clip','#f59e0b','Lượt thí sinh hoàn thành',dn],['bars','#8b5cf6','Tỷ lệ hoàn thành trung bình',(reg?Math.round(dn*100/reg):0)+'%']];
+ const SC=[['cal','#3b82f6','Tổng số kỳ thi',L.length],['users','#16a34a','Thí sinh đăng ký tài khoản',D.nu],['clip','#f59e0b','Số lượt thi',dn],['bars','#8b5cf6','Tỷ lệ hoàn thành trung bình',(reg?Math.round(dn*100/reg):0)+'%']];
  P(`<div class="a-h"><div><h1>Quản lý kỳ thi</h1><p>Tạo, chỉnh sửa và quản lý các kỳ thi trắc nghiệm trực tuyến.</p></div><div class="a-hr"><div class="p-sr">${ic('search',18)}<input id="gq" placeholder="Tìm kiếm kỳ thi..."></div><button class="btn big" id="add">${ic('plus',18)} Tạo kỳ thi mới</button></div></div>
 <div class="a-st">${SC.map(c=>`<div style="--c:${c[1]}"><span class="ti">${ic(c[0],28)}</span><div><b>${c[3]}</b><span class="l">${c[2]}</span></div>${spk(c[1])}</div>`).join('')}</div>
 <div class="p-card"><div class="a-tabs"><button class="on" data-t="all">Tất cả (${L.length})</button><button data-t="open">Đang mở (${nOpen})</button><button data-t="closed">Đã đóng (${L.length-nOpen})</button><div class="a-fl"><select id="fm"><option value="">Tất cả chế độ</option><option value="free">Thi tự do</option><option value="live">Thi đồng loạt</option></select><input id="fa" type="date" title="Tạo từ ngày"><input id="fb" type="date" title="Đến ngày"><div class="p-sr" style="min-width:170px">${ic('search',18)}<input id="gk" placeholder="Tìm theo tên kỳ thi..." style="height:44px"></div></div></div><div id="tb"></div><div class="pgn" id="pgn"></div></div>`);
@@ -595,7 +704,7 @@ async function exams(){
  const draw=()=>{const m=$('#fm').value,a=$('#fa').value?new Date($('#fa').value).getTime():0,b=$('#fb').value?new Date($('#fb').value).getTime()+864e5:Infinity,k=($('#gq').value.trim()||$('#gk').value.trim()).toLowerCase();
   const R=L.filter(e=>(tab==='all'||(tab==='open')===isOpen(e))&&(!m||e.mode===m)&&(!e.cr||(e.cr>=a&&e.cr<b))&&(!k||e.name.toLowerCase().includes(k))),pages=Math.max(1,Math.ceil(R.length/PS));
   pn=Math.min(pn,pages);const S=R.slice((pn-1)*PS,pn*PS);
-  $('#tb').innerHTML=tbl(['#','Tên kỳ thi','Chế độ','Thời gian làm bài','Số câu hỏi','Đăng ký','Hoàn thành','Trạng thái','Thời gian','Thao tác'],S.map((e,i)=>{const s=lab(e),ab=(a,c,t,l)=>`<button class="ab" style="--c:${c}" data-a="${a}" data-i="${e.id}" title="${l}" aria-label="${l}">${ic(t,16)}</button>`;
+  $('#tb').innerHTML=tbl(['#','Tên kỳ thi','Chế độ','Thời gian làm bài','Số câu hỏi','Lượt vào thi','Số lượt thi','Trạng thái','Thời gian','Thao tác'],S.map((e,i)=>{const s=lab(e),ab=(a,c,t,l)=>`<button class="ab" style="--c:${c}" data-a="${a}" data-i="${e.id}" title="${l}" aria-label="${l}">${ic(t,16)}</button>`;
    return`<tr><td>${(pn-1)*PS+i+1}</td><td><b>${esc(e.name)}</b><div class="sub2">${(e.mode==='live'?'Thi đồng loạt, admin bắt đầu và kết thúc':'Thi tự do, làm bài bất cứ lúc nào')+' · '+(e.gm==='rank'?'Chế độ 1: Xếp hạng':'Chế độ 2: Đạt/Không đạt')+' · Tối đa '+(e.maxa||1)+' lần'}</div></td><td><span class="tag" style="background:#e8f0fe;color:#2563eb">${e.mode==='live'?'Đồng loạt':'Tự do'}</span></td><td>${e.dur} phút</td><td>${nqOf(e)}</td><td>${ic('users',16)} ${e.n}</td><td style="color:#16a34a">${ic('check',16)} ${e.dn||0}</td><td><span class="tag ${s[1]}">● ${s[0]}</span></td><td style="font-size:calc(12px*var(--fs,1));color:var(--mut)">Tạo: ${dd(e.cr)}<br>Cập nhật: ${dd(e.up)}</td><td><div class="acts">${canStart(e)?ab('s','#16a34a','play',e.mode==='live'?'Bắt đầu thi':'Mở kỳ thi'):''}${canEnd(e)?ab('x','#dc2626','stop',e.mode==='live'?'Kết thúc':'Đóng kỳ thi'):''}${ab('q','#f59e0b','edit','Sửa kỳ thi và câu hỏi')}${ab('c','#2563eb','copy','Nhân bản')}${ab('m','#16a34a','bars','Theo dõi')}${ROLE==='admin'?ab('r','#7c3aed','reset','Đặt lại cuộc thi (xóa toàn bộ bài làm)'):''}${ab('d','#dc2626','trash','Xóa')}</div></td></tr>`}).join(''));
   $('#pgn').innerHTML=`<span>Hiển thị ${R.length?(pn-1)*PS+1:0} - ${(pn-1)*PS+S.length} trong ${R.length} kỳ thi</span><div><button data-p="${pn-1}" ${pn<2?'disabled':''} aria-label="Trang trước">${ic('chevl',16)}</button>${Array.from({length:pages},(_,i)=>`<button class="${i+1===pn?'on':''}" data-p="${i+1}">${i+1}</button>`).join('')}<button data-p="${pn+1}" ${pn>=pages?'disabled':''} aria-label="Trang sau">${ic('chev',16)}</button></div>`};
  draw();
@@ -710,9 +819,9 @@ async function res(){
  ['#fx','#fr','#fs'].forEach(i=>$(i).onchange=draw);$('#fq').oninput=draw;draw();
  if($('#rdl'))$('#rdl').onclick=async()=>{const ids=[...document.querySelectorAll('.rc:checked')].map(c=>c.dataset.id);if(!ids.length)return toast('Hãy chọn ít nhất một kết quả cần xóa','bad');if(!await ask2('Xóa '+ids.length+' kết quả đã chọn? Thí sinh sẽ được thi lại nếu còn lượt.'))return;try{const r=await api('rdel',{ids});toast('Đã xóa '+r.n+' kết quả','ok');res()}catch(x){toast(x.message,'bad')}};
  $('#csv').onclick=()=>{const c='\ufeffSTT,Hạng,Họ tên,CCCD,Đơn vị,SĐT,Kỳ thi,Lần,Chế độ,Số câu đúng,Điểm,Thời gian,Nộp lúc,Kết quả\n'+cur.map((x,i)=>[i+1,rk(x),x.name,'\t'+(x.cccd||''),x.unit,x.phone,x.exam,x.n,x.gm==='rank'?'Xếp hạng':'Đạt/Không đạt',x.rc!=null?x.rc+'/'+x.tt:'',x.score,mm(du(x)),fmt(x.sub),kq(x)].map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='ket-qua-thi.csv';a.click()}}
-function modal(title,fields,vals,ok){
+function modal(title,fields,vals,ok,note){
  const m=document.createElement('div');m.className='mod';
- m.innerHTML=`<div role="dialog"><h3>${title}</h3><form class="fg">${fields.map(f=>`<div class="${f.w?'w':''}"><label>${f.l}</label>${f.t==='sel'?`<select name="${f.k}">${f.o.map((o,i)=>`<option value="${f.v?f.v[i]:o}">${o}</option>`).join('')}</select>`:f.t==='ta'?`<textarea name="${f.k}" rows="${f.r||3}"></textarea>`:`<input name="${f.k}" type="${f.t||'text'}">`}</div>`).join('')}<div class="act w"><span class="err" id="me" style="margin-right:auto"></span><button type="button" class="btn o" id="mc">Hủy</button><button class="btn">Lưu</button></div></form></div>`;
+ m.innerHTML=`<div role="dialog"><h3>${title}</h3>${note||''}<form class="fg">${fields.map(f=>`<div class="${f.w?'w':''}"><label>${f.l}</label>${f.t==='sel'?`<select name="${f.k}">${f.o.map((o,i)=>`<option value="${f.v?f.v[i]:o}">${o}</option>`).join('')}</select>`:f.t==='ta'?`<textarea name="${f.k}" rows="${f.r||3}"></textarea>`:`<input name="${f.k}" type="${f.t||'text'}">`}</div>`).join('')}<div class="act w"><span class="err" id="me" style="margin-right:auto"></span><button type="button" class="btn o" id="mc">Hủy</button><button class="btn">Lưu</button></div></form></div>`;
  document.body.appendChild(m);const f=m.querySelector('form');
  fields.forEach(x=>{if(vals&&vals[x.k]!=null)f.elements[x.k].value=vals[x.k]});
  if(f.elements.gm){const tg=()=>{const r=f.elements.gm.value==='rank';[['pass',!r],['sr',r]].forEach(([k,v])=>{if(f.elements[k])f.elements[k].closest('div').style.display=v?'':'none'})};f.elements.gm.onchange=tg;tg()}
