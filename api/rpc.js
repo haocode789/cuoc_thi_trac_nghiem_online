@@ -10,8 +10,8 @@ const E = m => Object.assign(new Error(m), { user: true });
 const q = async (sql, args = []) => (await db.execute({ sql, args })).rows.map(r => ({ ...r }));
 const j = (s, d) => { try { return JSON.parse(s) ?? d } catch (e) { return d } };
 
-const SCHEMA = 6;
-const IMGK = ['logo', 'hero', 'banner', 'menubg'];
+const SCHEMA = 8;
+const IMGK = ['logo', 'hero', 'banner', 'menubg', 'loginbg'];
 const HOT = new Set(['adm', 'admu', 'secret', 'subu', 'subpw']);   // cấu hình ít đổi: giữ trong bộ nhớ, không hỏi DB mỗi request
 const CC = new Map();
 const cfg = async k => {
@@ -29,7 +29,7 @@ const DDL = [
   'CREATE TABLE IF NOT EXISTS questions(id INTEGER PRIMARY KEY AUTOINCREMENT,q TEXT,o TEXT,a INTEGER,subj TEXT,lvl TEXT)',
   "CREATE TABLE IF NOT EXISTS exams(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,mode TEXT,dur INTEGER,cnt INTEGER,t1 INTEGER,t2 INTEGER,status TEXT,st INTEGER,en INTEGER)",
   "CREATE TABLE IF NOT EXISTS attempts(id TEXT PRIMARY KEY,eid INTEGER,name TEXT,unit TEXT,phone TEXT,qids TEXT,ans TEXT DEFAULT '{}',deadline INTEGER,done INTEGER DEFAULT 0,score REAL,ok INTEGER,sub INTEGER)",
-  'CREATE TABLE IF NOT EXISTS cfg(k TEXT PRIMARY KEY,v TEXT)',
+  'CREATE TABLE IF NOT EXISTS cfg(k TEXT PRIMARY KEY,v TEXT)', 'CREATE TABLE IF NOT EXISTS fails(k TEXT PRIMARY KEY,n INTEGER,t INTEGER)', 'CREATE TABLE IF NOT EXISTS msgs(id INTEGER PRIMARY KEY AUTOINCREMENT,cccd TEXT,fr TEXT,body TEXT,at INTEGER,rd INTEGER DEFAULT 0,nm TEXT,v INTEGER DEFAULT 0)', 'CREATE INDEX IF NOT EXISTS ix_msg ON msgs(cccd)',
   'CREATE TABLE IF NOT EXISTS users(cccd TEXT PRIMARY KEY,name TEXT,unit TEXT,phone TEXT,pw TEXT,created INTEGER)',
   'CREATE TABLE IF NOT EXISTS papers(id INTEGER PRIMARY KEY AUTOINCREMENT,eid INTEGER,no INTEGER,qids TEXT)'
 ];
@@ -65,9 +65,29 @@ const init = () => ready || (ready = (async () => {
 const same = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y) };
 const hashPw = p => { const s = crypto.randomBytes(16).toString('hex'); return s + ':' + crypto.scryptSync(p, s, 32).toString('hex') };
 const checkPw = (p, st) => { const [s, h] = String(st || '').split(':'); return !!(s && h) && same(h, crypto.scryptSync(p, s, 32).toString('hex')) };
-const gf = async k => String((await cfg('f:' + k)) || '0,0').split(',').map(Number);
-const locked = async k => { const [, t] = await gf(k); if (t > Date.now()) throw E('Nhập sai quá nhiều lần, vui lòng thử lại sau 5 phút') };
-const fail = async k => { const [n] = await gf(k), m = n + 1; await cset('f:' + k, m >= 5 ? '0,' + (Date.now() + 300000) : m + ',0'); await new Promise(r => setTimeout(r, 500)) };
+// ===== Giới hạn đăng nhập / đăng ký (chống dò mật khẩu, chống spam ghi DB) =====
+// - Đếm TRƯỚC khi kiểm tra mật khẩu bằng một câu lệnh SQL nguyên tử nên gửi song song cũng không vượt được giới hạn.
+// - Khóa theo (tài khoản + IP): người lạ nhập sai không khóa được người dùng thật ở mạng khác.
+// - Thêm trần theo IP (net số lần sai) và trần theo tài khoản (chống dò từ nhiều IP).
+const WIN = 300000, IP_LIM = 100, ACC_IP_LIM = 5, ACC_LIM = 30, REG_LIM = 100, MSG_IP_LIM = 30;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const hit = async (k, win) => {
+  const now = Date.now();
+  await q('INSERT INTO fails(k,n,t) VALUES(?,1,?) ON CONFLICT(k) DO UPDATE SET n=CASE WHEN t<? THEN 1 ELSE n+1 END, t=CASE WHEN t<? THEN ? ELSE t END', [k, now, now - win, now - win, now]);
+  if (Math.random() < 0.02) await q('DELETE FROM fails WHERE t<?', [now - 3600000]).catch(() => {});
+  const r = await q('SELECT n FROM fails WHERE k=?', [k]);
+  return r.length ? +r[0].n : 1;
+};
+const attempt = async (b, acct, real) => {   // real = tài khoản có thật (chỉ khi đó mới tạo khóa theo tài khoản toàn cục)
+  const ip = String(b._ip || '?'), ks = ['i:' + ip, 'a:' + acct + '|' + ip], lim = [IP_LIM, ACC_IP_LIM, ACC_LIM];
+  if (real) ks.push('g:' + acct);
+  for (let i = 0; i < ks.length; i++) if (await hit(ks[i], WIN) > lim[i]) { await sleep(300); throw E('Nhập sai quá nhiều lần, vui lòng thử lại sau 5 phút'); }
+  return ks;
+};
+const ok = async ks => {   // đăng nhập đúng: xóa bộ đếm tài khoản+IP, hoàn lại 1 lượt ở bộ đếm IP/toàn cục
+  await q('DELETE FROM fails WHERE k=?', [ks[1]]);
+  await q('UPDATE fails SET n=MAX(n-1,0) WHERE k IN (?,?)', [ks[0], ks[2] || ks[0]]);
+};
 const adminTok = async () => { const x = Date.now() + 12 * 3600e3; return x + '.' + hmac('adm' + x + await cfg('adm')) };
 const isAdmin = async req => { const [x, s] = String(req.headers.authorization || '').replace('Bearer ', '').split('.'), h = await cfg('adm'); return !!(x && s && h && +x > Date.now() && same(s, hmac('adm' + x + h))) };
 const subTok = async () => { const x = Date.now() + 12 * 3600e3; return 'sub.' + x + '.' + hmac('sub' + x + await cfg('subpw')); };
@@ -176,6 +196,11 @@ const H = {
   async astat() { return { set: !!(await cfg('adm')) } },
   async setup(b) {
     if (await cfg('adm')) throw E('Tài khoản quản trị đã được thiết lập');
+    const SK = process.env.SETUP_KEY;
+    if (!SK) throw E('Chưa cấu hình biến môi trường SETUP_KEY trên Vercel nên chưa thể thiết lập tài khoản quản trị');
+    const ksS = await attempt(b, 'setup', true);
+    if (!same(String(b.k || ''), SK)) { await sleep(500); throw E('Mã thiết lập không đúng'); }
+    await ok(ksS);
     const u = String(b.u || '').trim(), p = String(b.p || '');
     if (u.length < 3) throw E('Tên đăng nhập tối thiểu 3 ký tự');
     if (p.length < 6) throw E('Mật khẩu tối thiểu 6 ký tự');
@@ -183,10 +208,10 @@ const H = {
     return { token: await adminTok() };
   },
   async login(b) {
-    await locked('adm');
+    const ks = await attempt(b, 'adm', true);
     const h = await cfg('adm');
-    if (h && String(b.u || '').trim() === (await cfg('admu')) && checkPw(String(b.p || ''), h)) { await cset('f:adm', '0,0'); return { token: await adminTok() }; }
-    await fail('adm'); throw E('Sai tên đăng nhập hoặc mật khẩu');
+    if (h && String(b.u || '').trim() === (await cfg('admu')) && checkPw(String(b.p || ''), h)) { await ok(ks); return { token: await adminTok() }; }
+    await sleep(500); throw E('Sai tên đăng nhập hoặc mật khẩu');
   },
   async subget() { return { u: (await cfg('subu')) || null }; },
   async subset(b) {   // chỉ quản trị viên chính
@@ -213,15 +238,17 @@ const H = {
     return { n: r.rowsAffected };
   },
   async chpw(b) {
-    await locked('adm');
+    const ks = await attempt(b, 'adm', true);
     const p = String(b.p || ''), u = String(b.u || '').trim();
-    if (!checkPw(String(b.old || ''), await cfg('adm'))) { await fail('adm'); throw E('Mật khẩu hiện tại không đúng'); }
+    if (!checkPw(String(b.old || ''), await cfg('adm'))) { await sleep(500); throw E('Mật khẩu hiện tại không đúng'); }
+    await ok(ks);
     if (p.length < 6) throw E('Mật khẩu mới tối thiểu 6 ký tự');
     if (u && u.length < 3) throw E('Tên đăng nhập tối thiểu 3 ký tự');
     await cset('adm', hashPw(p)); if (u) await cset('admu', u);
     return { token: await adminTok() };
   },
   async reg(b) {
+    if (await hit('r:' + String(b._ip || '?'), 600000) > REG_LIM) throw E('Đăng ký quá nhiều lần từ cùng một mạng, vui lòng thử lại sau ít phút');
     const cccd = String(b.cccd || '').trim(), name = String(b.name || '').trim().slice(0, 80), unit = String(b.unit || '').trim().slice(0, 80), phone = String(b.phone || '').trim().slice(0, 20), p = String(b.p || '');
     if (!/^\d{12}$/.test(cccd)) throw E('Số căn cước công dân phải gồm đúng 12 chữ số');
     if (!name) throw E('Vui lòng nhập họ và tên');
@@ -234,29 +261,28 @@ const H = {
     const id = String(b.u || '').trim().slice(0, 60), p = String(b.p || '');
     if (!id || !p) throw E('Vui lòng nhập tài khoản và mật khẩu');
     const u = /^\d{6,20}$/.test(id) ? (await q('SELECT * FROM users WHERE cccd=?', [id]))[0] : null;
+    const admu = await cfg('admu'), subu = await cfg('subu'), real = !!u || id === admu || (!!id && id === subu);
+    const ks = await attempt(b, u ? 'u' + id : id === admu ? 'adm' : id === subu ? 'sub' : 'x:' + id, real);
     if (u) {
-      const k = 'u' + id; await locked(k);
-      if (!checkPw(p, u.pw)) { await fail(k); throw E('Sai tài khoản hoặc mật khẩu'); }
-      await cset('f:' + k, '0,0'); return { role: 'user', ...uout(u) };
+      if (!checkPw(p, u.pw)) { await sleep(500); throw E('Sai tài khoản hoặc mật khẩu'); }
+      await ok(ks); return { role: 'user', ...uout(u) };
     }
-    if (id === (await cfg('admu'))) {
-      await locked('adm');
+    if (id === admu) {
       const h = await cfg('adm');
-      if (h && checkPw(p, h)) { await cset('f:adm', '0,0'); return { role: 'admin', token: await adminTok() }; }
-      await fail('adm');
-    } else if (id && id === (await cfg('subu'))) {
-      await locked('sub');
+      if (h && checkPw(p, h)) { await ok(ks); return { role: 'admin', token: await adminTok() }; }
+      await sleep(500);
+    } else if (id && id === subu) {
       const h = await cfg('subpw');
-      if (h && checkPw(p, h)) { await cset('f:sub', '0,0'); return { role: 'sub', token: await subTok() }; }
-      await fail('sub');
+      if (h && checkPw(p, h)) { await ok(ks); return { role: 'sub', token: await subTok() }; }
+      await sleep(500);
     } else await new Promise(x => setTimeout(x, 500));
     throw E('Sai tài khoản hoặc mật khẩu');
   },
   async ulogin(b) {
-    const c = String(b.cccd || '').trim(), k = 'u' + c; await locked(k);
-    const u = (await q('SELECT * FROM users WHERE cccd=?', [c]))[0];
-    if (!u || !checkPw(String(b.p || ''), u.pw)) { await fail(k); throw E('Sai số căn cước hoặc mật khẩu'); }
-    await cset('f:' + k, '0,0'); return uout(u);
+    const c = String(b.cccd || '').trim().slice(0, 60);
+    const u = (await q('SELECT * FROM users WHERE cccd=?', [c]))[0], ks = await attempt(b, 'u' + c, !!u);
+    if (!u || !checkPw(String(b.p || ''), u.pw)) { await sleep(500); throw E('Sai số căn cước hoặc mật khẩu'); }
+    await ok(ks); return uout(u);
   },
   async theme(b) {
     const v = (await cfg('thv')) || '0';
@@ -282,6 +308,56 @@ const H = {
     const v = String(Date.now()); w.push(cset('thv', v));
     await Promise.all(w); return { ok: 1, v };
   },
+  // ===== Tin nhắn hỗ trợ: thí sinh <-> quản trị viên chính =====
+  async msend(b) {   // công khai: thí sinh đã đăng nhập (ut) hoặc người chưa đăng nhập (họ tên + CCCD, đánh dấu v=0)
+    if (await hit('m:' + String(b._ip || '?'), 600000) > MSG_IP_LIM) throw E('Bạn gửi quá nhiều tin nhắn, vui lòng thử lại sau ít phút');
+    const text = String(b.text || '').trim().slice(0, 1000);
+    if (!text) throw E('Vui lòng nhập nội dung tin nhắn');
+    let cccd, name, v = 0;
+    if (b.ut) { const u = await uauth(b); cccd = u.cccd; name = u.name; v = 1; }
+    else {
+      cccd = String(b.cccd || '').trim(); name = String(b.name || '').trim().slice(0, 80);
+      if (!/^\d{12}$/.test(cccd)) throw E('Số căn cước công dân phải gồm đúng 12 chữ số');
+      if (!name) throw E('Vui lòng nhập họ và tên');
+    }
+    if (await hit('mc:' + cccd, 3600000) > 10) throw E('Bạn đã gửi nhiều tin nhắn, vui lòng chờ quản trị viên trả lời');
+    await q("INSERT INTO msgs(cccd,fr,body,at,rd,nm,v) VALUES(?,'u',?,?,0,?,?)", [cccd, text, Date.now(), name, v]);
+    return { ok: 1 };
+  },
+  async mlist(b) {   // thí sinh xem hội thoại của chính tài khoản mình (peek: chỉ đếm tin chưa đọc)
+    const u = await uauth(b);
+    const unread = +(await q("SELECT COUNT(*) c FROM msgs WHERE cccd=? AND fr='a' AND rd=0", [u.cccd]))[0].c;
+    if (b.peek) return { unread };
+    const items = await q('SELECT id,fr,body,at FROM msgs WHERE cccd=? ORDER BY id DESC LIMIT 100', [u.cccd]); items.reverse();
+    await q("UPDATE msgs SET rd=1 WHERE cccd=? AND fr='a' AND rd=0", [u.cccd]);
+    return { items, unread: 0 };
+  },
+  async mthreads() {
+    const g = await q("SELECT cccd, MAX(id) lid, SUM(CASE WHEN fr='u' AND rd=0 THEN 1 ELSE 0 END) unread FROM msgs GROUP BY cccd ORDER BY lid DESC LIMIT 200");
+    if (!g.length) return [];
+    const ids = g.map(x => x.lid);
+    const ls = await q("SELECT m.id,m.fr,m.body,m.at,COALESCE(u.name,(SELECT nm FROM msgs WHERE cccd=m.cccd AND fr='u' ORDER BY id DESC LIMIT 1)) name FROM msgs m LEFT JOIN users u ON u.cccd=m.cccd WHERE m.id IN (" + ids.map(() => '?').join(',') + ')', ids);
+    const by = new Map(ls.map(x => [+x.id, x]));
+    return g.map(x => { const l = by.get(+x.lid) || {}; return { cccd: x.cccd, unread: +x.unread || 0, last: String(l.body || '').slice(0, 120), fr: l.fr, at: l.at, name: l.name || '' }; });
+  },
+  async mthread(b) {
+    const c = String(b.cccd || '').trim().slice(0, 20);
+    const items = await q('SELECT id,fr,body,at,v FROM msgs WHERE cccd=? ORDER BY id DESC LIMIT 200', [c]); items.reverse();
+    await q("UPDATE msgs SET rd=1 WHERE cccd=? AND fr='u' AND rd=0", [c]);
+    const u = (await q('SELECT name,unit,phone FROM users WHERE cccd=?', [c]))[0];
+    const nm = u ? u.name : ((await q("SELECT nm FROM msgs WHERE cccd=? AND fr='u' ORDER BY id DESC LIMIT 1", [c]))[0] || {}).nm;
+    return { items, name: nm || '', unit: u ? u.unit : '', phone: u ? u.phone : '', acct: !!u };
+  },
+  async mreply(b) {
+    const c = String(b.cccd || '').trim(), text = String(b.text || '').trim().slice(0, 1000);
+    if (!/^\d{12}$/.test(c)) throw E('Số căn cước công dân không hợp lệ');
+    if (!text) throw E('Vui lòng nhập nội dung trả lời');
+    if (!(await q('SELECT 1 x FROM msgs WHERE cccd=? LIMIT 1', [c])).length) throw E('Không tìm thấy cuộc trò chuyện này');
+    await q("INSERT INTO msgs(cccd,fr,body,at,rd,v) VALUES(?,'a',?,?,0,1)", [c, text, Date.now()]);
+    return { ok: 1 };
+  },
+  async mdel(b) { await q('DELETE FROM msgs WHERE cccd=?', [String(b.cccd || '').trim().slice(0, 20)]); return { ok: 1 }; },
+  async mcount() { return { n: +(await q("SELECT COUNT(*) c FROM msgs WHERE fr='u' AND rd=0"))[0].c }; },
   async mex(b) { return mexF(await uauth(b)); },
   async pre(b) {   // nạp trước mọi mục của thí sinh bằng 1 request
     const u = await uauth(b);
@@ -301,10 +377,10 @@ const H = {
     return { name, unit, phone };
   },
   async mepw(b) {
-    const u = await uauth(b), k = 'u' + u.cccd, p = String(b.p || ''); await locked(k);
-    if (!checkPw(String(b.old || ''), u.pw)) { await fail(k); throw E('Mật khẩu hiện tại không đúng'); }
+    const u = await uauth(b), p = String(b.p || ''), ks = await attempt(b, 'u' + u.cccd, true);
+    if (!checkPw(String(b.old || ''), u.pw)) { await sleep(500); throw E('Mật khẩu hiện tại không đúng'); }
     if (p.length < 6) throw E('Mật khẩu mới tối thiểu 6 ký tự');
-    await q('UPDATE users SET pw=? WHERE cccd=?', [hashPw(p), u.cccd]); await cset('f:' + k, '0,0');
+    await q('UPDATE users SET pw=? WHERE cccd=?', [hashPw(p), u.cccd]); await ok(ks);
     return { ok: 1 };
   },
   async myres(b) { return myresF(await uauth(b)); },
@@ -508,23 +584,29 @@ const H = {
     return rows.map(r => ({ ...r, gm: r.gm === 'rank' ? 'rank' : 'pass', n: r.n || 1, rk: r.gm === 'rank' ? (rm[r.eid].rk.get(r.id) ?? null) : null }));
   }
 };
-const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'newsset', 'stats', 'act', 'edup', 'pgen', 'pl', 'pd', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud', 'subget', 'subset', 'subdel', 'xreset', 'rdel']);
-const MAIN = new Set(['chpw', 'themeset', 'subget', 'subset', 'subdel', 'xreset', 'rdel']);   // tài khoản phụ không được dùng
+const ADM = new Set(['dash', 'ql', 'qs', 'qd', 'el', 'es', 'ed', 'start', 'end', 'mon', 'res', 'ext', 'qi', 'qda', 'newsset', 'stats', 'act', 'edup', 'pgen', 'pl', 'pd', 'esel', 'qcp', 'qold', 'chpw', 'themeset', 'ul', 'ures', 'ud', 'subget', 'subset', 'subdel', 'xreset', 'rdel', 'mthreads', 'mthread', 'mreply', 'mdel', 'mcount']);
+const MAIN = new Set(['chpw', 'themeset', 'subget', 'subset', 'subdel', 'xreset', 'rdel', 'ures', 'ud', 'mthreads', 'mthread', 'mreply', 'mdel', 'mcount']);   // tài khoản phụ không được dùng
 
 
-// Tài khoản quản trị phụ chỉ được chỉnh sửa kỳ thi do chính tài khoản phụ tạo (cột exams.ow = 'sub').
+// Tài khoản quản trị phụ chỉ được XEM và CHỈNH SỬA kỳ thi (cùng câu hỏi, đáp án) do chính tài khoản phụ tạo (exams.ow = 'sub').
 const qEid = async id => { const x = (await q('SELECT eid FROM questions WHERE id=?', [id]))[0]; return x ? x.eid : null; };
-const OWN = {   // hành động chỉnh sửa → cách lấy mã kỳ thi bị tác động (null = tạo mới, không cần kiểm tra)
-  es: b => b.id || null, ed: b => b.id, start: b => b.id, end: b => b.id, ext: b => b.id, edup: null,
-  esel: b => b.id, pgen: b => b.id, qi: b => b.eid, qda: b => b.eid, qcp: b => b.eid,
-  qs: async b => b.id ? qEid(b.id) : b.eid, qd: async b => qEid(b.id)
+const OWN = {   // hành động → các cách lấy mã kỳ thi bị tác động (đều phải thuộc tài khoản phụ)
+  es: [b => b.id || 'new'], ed: [b => b.id], start: [b => b.id], end: [b => b.id], ext: [b => b.id], esel: [b => b.id], pgen: [b => b.id],
+  qi: [b => b.eid], qda: [b => b.eid], ql: [b => b.eid], edup: [b => b.id],
+  qcp: [b => b.eid, b => b.from === 'old' ? 0 : b.from],      // nguồn sao chép cũng phải là kỳ thi của mình; ngân hàng cũ thì không
+  qs: [async b => b.id ? qEid(b.id) : b.eid], qd: [async b => qEid(b.id)],
+  pd: [async b => (await q('SELECT eid FROM papers WHERE id=?', [b.id]))[0]?.eid],
+  qold: [() => 0]                                              // ngân hàng câu hỏi cũ: chỉ admin chính
 };
 const ownGuard = async b => {
-  const f = OWN[b.a]; if (!f) return;
-  const eid = await f(b); if (eid === null && b.a === 'es') return;
-  const e = eid ? (await q('SELECT ow FROM exams WHERE id=?', [+eid]))[0] : null;
-  if (!e || e.ow !== 'sub') throw Object.assign(new Error('Tài khoản quản trị phụ chỉ được chỉnh sửa kỳ thi do chính tài khoản mình tạo'), { forbid: true });
+  for (const f of OWN[b.a] || []) {
+    const eid = await f(b); if (eid === 'new') continue;
+    const e = eid ? (await q('SELECT ow FROM exams WHERE id=?', [+eid]))[0] : null;
+    if (!e || e.ow !== 'sub') throw Object.assign(new Error('Tài khoản quản trị phụ chỉ được xem và chỉnh sửa kỳ thi do chính tài khoản mình tạo'), { forbid: true });
+  }
 };
+// IP máy khách: ưu tiên header do Vercel đặt (client không giả mạo được)
+const clientIp = req => String(req.headers['x-vercel-forwarded-for'] || req.headers['x-real-ip'] || String(req.headers['x-forwarded-for'] || '').split(',')[0] || (req.socket && req.socket.remoteAddress) || '?').split(',')[0].trim().slice(0, 64);
 
 module.exports = async (req, res) => {
   try {
@@ -532,6 +614,7 @@ module.exports = async (req, res) => {
     await init();
     const b = req.body || {}, f = H[b.a];
     if (!f) return res.status(400).json({ e: 'Yêu cầu không hợp lệ' });
+    b._ip = clientIp(req); b._rl = null;   // luôn do máy chủ đặt, bỏ qua giá trị client gửi lên
     if (ADM.has(b.a)) {
       const rl = await role(req);
       if (!rl) return res.status(401).json({ e: 'Cần đăng nhập quản trị' });
