@@ -307,6 +307,26 @@ body.ld2 #busy{transform:translate(-50%,0)}
 .stg-c{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}.stg-c .zv{min-width:48px;text-align:center}.stg-ov{display:flex;gap:6px;align-items:center;margin:0;font-size:calc(12px*var(--fs,1))}.stg-ov input{width:110px}
 .p2w{margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
 .p2w h4{margin:0 0 4px}.p2b{height:8px;border-radius:99px;background:var(--line);overflow:hidden;min-width:90px}.p2b i{display:block;height:100%;background:var(--ok);border-radius:99px}
+
+/* ---- Mobile fixes ---- */
+.p-ov,.p-fab{display:none}
+@media(max-width:900px){
+.p-ov{display:block;position:fixed;inset:0;background:rgba(5,15,40,.5);backdrop-filter:blur(2px);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+.p-app.open .p-ov{opacity:1;pointer-events:auto}
+.p-side{height:100vh;height:100dvh;max-width:86vw;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.p-fab{display:flex;align-items:center;gap:8px;position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:8;border:0;border-radius:28px;height:50px;padding:0 18px;background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff;font-weight:700;font-family:inherit;font-size:calc(14px*var(--fs,1));box-shadow:0 8px 22px rgba(37,99,235,.45);cursor:pointer}
+.p-fab .nbd{position:absolute;top:-4px;right:-2px;margin:0}
+.p-main{padding-bottom:76px}
+.p-chips{width:100%;flex-direction:column;gap:0}.p-chips>div{border-left:0;padding:6px 10px}
+.p-um{padding:6px 10px}.p-um>span:nth-child(2){display:none}
+.p-tb{gap:8px}
+.p-ban{min-height:0}
+.p-lh .p-sr{max-width:none;min-width:0;flex-basis:100%;order:5}
+.p-ft{padding:14px 14px}
+.mod{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.mod>div{margin:auto;max-height:none}
+.sp-f textarea,.sp-f input{font-size:16px}
+}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"></noscript>
 <script>try{if(localStorage.getItem("ttu")||sessionStorage.getItem("ttu")||location.hash==="#admin"){var l=document.createElement("link");l.rel="preload";l.as="image";l.href="/banner.jpg";document.head.appendChild(l)}}catch(e){}</script></head>
@@ -605,27 +625,7 @@ function ansTable(L,E){
  const fn=(E.name||'ky-thi').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,60)||'ky-thi',dl=(blob,name)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
  m.querySelector('#aq').onclick=()=>m.remove();
  m.querySelector('#ac').onclick=()=>{const c='\ufeffSTT,Câu hỏi,Đáp án,Nội dung đáp án đúng,A,B,C,D\n'+rows.map(r=>[r.n,r.q,r.k,r.t,...[0,1,2,3].map(i=>r.o[i]||'')].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');dl(new Blob([c],{type:'text/csv;charset=utf-8'}),'bang-dap-an-'+fn+'.csv')};
- m.querySelector('#aw').onclick=()=>{const h=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Bảng đáp án</title><style>body{font-family:'Times New Roman',serif;font-size:13pt}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:4px 6px;vertical-align:top}th{background:#e8e8e8}
-/* ---- Mobile fixes ---- */
-.p-ov,.p-fab{display:none}
-@media(max-width:900px){
-.p-ov{display:block;position:fixed;inset:0;background:rgba(5,15,40,.5);backdrop-filter:blur(2px);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
-.p-app.open .p-ov{opacity:1;pointer-events:auto}
-.p-side{height:100vh;height:100dvh;max-width:86vw;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.p-fab{display:flex;align-items:center;gap:8px;position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:8;border:0;border-radius:28px;height:50px;padding:0 18px;background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff;font-weight:700;font-family:inherit;font-size:calc(14px*var(--fs,1));box-shadow:0 8px 22px rgba(37,99,235,.45);cursor:pointer}
-.p-fab .nbd{position:absolute;top:-4px;right:-2px;margin:0}
-.p-main{padding-bottom:76px}
-.p-chips{width:100%;flex-direction:column;gap:0}.p-chips>div{border-left:0;padding:6px 10px}
-.p-um{padding:6px 10px}.p-um>span:nth-child(2){display:none}
-.p-tb{gap:8px}
-.p-ban{min-height:0}
-.p-lh .p-sr{max-width:none;min-width:0;flex-basis:100%;order:5}
-.p-ft{padding:14px 14px}
-.mod{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.mod>div{margin:auto;max-height:none}
-.sp-f textarea,.sp-f input{font-size:16px}
-}
-</style></head><body><h2>Bảng đáp án – ${esc(E.name)}</h2><p><b>Đáp án nhanh:</b> ${esc(key)}</p><table><thead><tr><th>STT</th><th>Câu hỏi</th><th>Đáp án</th><th>Nội dung đáp án đúng</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.n}</td><td>${esc(r.q)}</td><td><b>${r.k}</b></td><td>${esc(r.t)}</td></tr>`).join('')}</tbody></table></body></html>`;dl(new Blob(['\ufeff'+h],{type:'application/msword'}),'bang-dap-an-'+fn+'.doc')};
+ m.querySelector('#aw').onclick=()=>{const h=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Bảng đáp án</title><style>body{font-family:'Times New Roman',serif;font-size:13pt}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:4px 6px;vertical-align:top}th{background:#e8e8e8}</style></head><body><h2>Bảng đáp án – ${esc(E.name)}</h2><p><b>Đáp án nhanh:</b> ${esc(key)}</p><table><thead><tr><th>STT</th><th>Câu hỏi</th><th>Đáp án</th><th>Nội dung đáp án đúng</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.n}</td><td>${esc(r.q)}</td><td><b>${r.k}</b></td><td>${esc(r.t)}</td></tr>`).join('')}</tbody></table></body></html>`;dl(new Blob(['\ufeff'+h],{type:'application/msword'}),'bang-dap-an-'+fn+'.doc')};
 }
 function impWord(){
  const inp=document.createElement('input');inp.type='file';inp.accept='.docx,.doc';
